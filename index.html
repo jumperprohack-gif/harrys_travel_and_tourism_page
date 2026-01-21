@@ -128,7 +128,7 @@ th,td{
 <!-- PLANNER -->
 <section id="planner" style="display:none">
   <h2>🧳 Trip Planner</h2>
-  <p id="budgetText">Budget: £2000</p>
+  <p id="budgetText">Budget: £0</p>
 
   <select id="destinationSelect">
     <option value="0">Destination</option>
@@ -151,6 +151,11 @@ th,td{
     <option value="400">Hostel</option>
     <option value="500">Apartment</option>
   </select>
+
+  <p>
+    <input id="plannerName" placeholder="Your Name">
+    <input id="plannerClass" placeholder="Your Class">
+  </p>
 
   <p id="plannerResult"></p>
   <button onclick="finishPlanner()">Finish</button>
@@ -201,6 +206,8 @@ th,td{
   </table>
   <canvas id="scoreChart" width="400" height="200"></canvas>
   <canvas id="difficultyChart" width="400" height="200"></canvas>
+  <h3>Trip Planner Scores</h3>
+  <canvas id="plannerChart" width="400" height="200"></canvas>
   <button onclick="backToLogin()">Back</button>
   <button onclick="logout()">Logout</button>
 </section>
@@ -225,6 +232,7 @@ let selected=[];
 let difficulty="easy";
 let startTime, endTime;
 let isLoggedIn=false;
+let plannerBudget=0;
 
 const destinations=[
  {a:"Paris",c:["Eiffel Tower","Euro","Croissants","Spring","Romantic"]},
@@ -236,10 +244,10 @@ const destinations=[
  {a:"Sydney",c:["Opera House","AUD","Beaches","Summer","Harbour"]}
 ];
 
-// ===== LOGIN FUNCTIONS =====
+// ===== LOGIN =====
 function checkLogin(){
   if(loginCode.value===LOGIN_CODE){
-    isLoggedIn = true;
+    isLoggedIn=true;
     login.style.display="none";
     home.style.display="block";
   } else alert("Incorrect code");
@@ -262,28 +270,45 @@ function backToLogin(){
   login.style.display="block";
 }
 
-// ===== LOGOUT FUNCTION =====
+// ===== LOGOUT =====
 function logout(){
-  isLoggedIn = false;
+  isLoggedIn=false;
   score=0; round=0; selected=[];
   document.querySelectorAll("section").forEach(s=>s.style.display="none");
   login.style.display="block";
 }
 
-// ===== PLANNER =====
-function showPlanner(){ home.style.display="none"; planner.style.display="block"; }
+function logoutAll(){
+  if(confirm("Clear all saved scores and log out everyone?")){
+    localStorage.removeItem("scores");
+    localStorage.removeItem("plannerScores");
+    location.reload();
+  }
+}
 
-function finishPlanner() {
-  const selects = [destinationSelect, transportSelect, accommodationSelect];
-  let plannerScore = 0;
-  selects.forEach(s => { if(s.value !== "0") plannerScore++; });
-  const scaledScore = Math.round((plannerScore / selects.length) * 5);
+// ===== PLANNER =====
+function showPlanner(){ 
+  home.style.display="none"; 
+  planner.style.display="block"; 
+
+  plannerBudget = Math.floor(Math.random()*(5000-1500+1))+1500;
+  document.getElementById('budgetText').innerText=`Budget: £${plannerBudget}`;
+}
+
+function finishPlanner(){
+  const selects=[destinationSelect,transportSelect,accommodationSelect];
+  let plannerScore=0;
+  selects.forEach(s=>{ if(s.value!=="0") plannerScore++; });
+  let scaledScore=Math.round((plannerScore/selects.length)*5);
+
+  const name=plannerName.value||"Anonymous";
+  const studentClass=plannerClass.value||"Unknown";
+
   alert(`Trip Planner completed! Score: ${scaledScore}/5`);
 
-  // Save planner score (optional)
-  const plannerScores = JSON.parse(localStorage.getItem('plannerScores')||"[]");
-  plannerScores.push({ n:"Planner User", s:scaledScore, max:5, t:new Date().toLocaleString() });
-  localStorage.setItem('plannerScores', JSON.stringify(plannerScores));
+  const plannerScores=JSON.parse(localStorage.getItem('plannerScores')||"[]");
+  plannerScores.push({ n:name, c:studentClass, s:scaledScore, max:5, t:new Date().toLocaleString() });
+  localStorage.setItem('plannerScores',JSON.stringify(plannerScores));
 
   backHome();
 }
@@ -305,11 +330,30 @@ function difficultySelect(){
   return d||"easy";
 }
 
+// ===== REAL DIFFICULTY ROUND LOADING =====
 function loadRound(){
   if(round>=selected.length){ endGame(); return; }
+
   roundText.innerText=`Round ${round+1}/${selected.length}`;
-  clues.innerHTML=selected[round].c.slice(0,clueLimit).map(x=>"<li>"+x+"</li>").join("");
-  guess.innerHTML="<option>Select</option>"+destinations.map(d=>`<option>${d.a}</option>`).join("");
+
+  let cluesToShow = selected[round].c.slice(0, clueLimit);
+
+  // Add decoy clues for medium/hard
+  if(difficulty === "medium"){
+    const decoys = ["Food", "Music", "Beach", "River", "Mountain"];
+    cluesToShow = [...cluesToShow, decoys[Math.floor(Math.random()*decoys.length)]];
+    cluesToShow.sort(() => Math.random() - 0.5);
+  } else if(difficulty === "hard"){
+    const decoys = ["Sun", "Moon", "Car", "Book", "Festival"];
+    cluesToShow = [cluesToShow[0]||"", decoys[Math.floor(Math.random()*decoys.length)]];
+    cluesToShow.sort(() => Math.random() - 0.5);
+  }
+
+  clues.innerHTML = cluesToShow.map(x=>"<li>"+x+"</li>").join("");
+
+  // Shuffle answer options so correct answer isn’t always last
+  const shuffledOptions = destinations.map(d=>d.a).sort(() => Math.random() - 0.5);
+  guess.innerHTML="<option>Select</option>"+shuffledOptions.map(x=>`<option>${x}</option>`).join("");
 }
 
 function submitGuess(){
@@ -321,14 +365,14 @@ function endGame(){
   guessGame.style.display="none";
   end.style.display="block";
   endTime=new Date();
-  const timeSpent = Math.floor((endTime - startTime)/1000);
+  const timeSpent=Math.floor((endTime-startTime)/1000);
   scoreText.innerText=`Score: ${score} (${difficulty}) | Time: ${timeSpent} sec`;
 }
 
 // ===== SAVE SCORE =====
 function saveScore(){
   const data=JSON.parse(localStorage.getItem("scores")||"[]");
-  const timeSpent = Math.floor((endTime - startTime)/1000);
+  const timeSpent=Math.floor((endTime-startTime)/1000);
   data.push({ n:studentName.value, c:studentClass.value, s:score, d:difficulty, t:new Date().toLocaleString(), time:timeSpent });
   localStorage.setItem("scores",JSON.stringify(data));
   showBoards();
@@ -343,21 +387,7 @@ function showBoards(){
   });
 }
 
-// ===== OWNER FUNCTIONS =====
-function ownerAccess(){
-  const c=prompt("Code please");
-  if(c===OWNER_CODE){ home.style.display="none"; ownerSuite.style.display="block"; }
-}
-
-function logoutAll(){
-  if(confirm("Clear all saved scores and log out everyone?")){
-    localStorage.removeItem("scores");
-    localStorage.removeItem("plannerScores");
-    location.reload();
-  }
-}
-
-// ===== TEACHER FUNCTIONS =====
+// ===== TEACHER =====
 function showTeacherSuite(){
   teacherSuite.style.display="block";
   teacherTable.innerHTML="";
@@ -366,13 +396,13 @@ function showTeacherSuite(){
     teacherTable.innerHTML+=`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d}</td><td>${x.t}</td><td>${x.time||0}</td></tr>`;
   });
 
-  // Score Bar Chart
+  // Guess Game Score Chart
   const ctx=document.getElementById('scoreChart').getContext('2d');
   new Chart(ctx,{
     type:'bar',
     data:{
       labels:scores.map(x=>x.n),
-      datasets:[{ label:'Score', data:scores.map(x=>x.s), backgroundColor:'rgba(79,195,247,0.7)' }]
+      datasets:[{ label:'Guess Game Score', data:scores.map(x=>x.s), backgroundColor:'rgba(79,195,247,0.7)' }]
     }
   });
 
@@ -387,12 +417,29 @@ function showTeacherSuite(){
       datasets:[{ data:[diffCounts.easy,diffCounts.medium,diffCounts.hard], backgroundColor:['#4fc3f7','#f7b74f','#f74f4f'] }]
     }
   });
+
+  // Trip Planner Chart
+  const plannerScores=JSON.parse(localStorage.getItem('plannerScores')||"[]");
+  const ctx3=document.getElementById('plannerChart').getContext('2d');
+  new Chart(ctx3,{
+    type:'bar',
+    data:{
+      labels:plannerScores.map(x=>x.n),
+      datasets:[{ label:'Trip Planner Score (out of 5)', data:plannerScores.map(x=>x.s), backgroundColor:'rgba(247,79,158,0.7)' }]
+    },
+    options:{ scales:{ y:{ beginAtZero:true, max:5 } } }
+  });
 }
 
-// ===== STYLE TOGGLES =====
+// ===== OWNER =====
+function ownerAccess(){
+  const c=prompt("Code please");
+  if(c===OWNER_CODE){ home.style.display="none"; ownerSuite.style.display="block"; }
+}
+
+// ===== STYLE =====
 function toggleContrast(){ document.body.classList.toggle("high-contrast"); }
 function toggleText(){ document.body.classList.toggle("large-text"); }
-
 function backHome(){
   document.querySelectorAll("section").forEach(s=>s.style.display="none");
   if(isLoggedIn) home.style.display="block";
