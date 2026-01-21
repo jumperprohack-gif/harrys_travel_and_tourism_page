@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>Travel And Tourism</title>
 
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 :root{
   --bg: rgba(0,0,0,0.85);
@@ -93,6 +96,15 @@ th,td{
   <p>Please enter the access code</p>
   <input type="password" id="loginCode" placeholder="Enter code">
   <button onclick="checkLogin()">Enter</button>
+  <p>Or <button onclick="showTeacherLogin()">Teacher Login</button></p>
+</section>
+
+<!-- TEACHER LOGIN -->
+<section id="teacherLogin" style="display:none">
+  <h2>👩‍🏫 Teacher Login</h2>
+  <input type="password" id="teacherCodeInput" placeholder="Teacher code">
+  <button onclick="checkTeacher()">Login</button>
+  <button onclick="backHome()">Back</button>
 </section>
 
 <!-- HOME -->
@@ -142,6 +154,7 @@ th,td{
 
   <p id="plannerResult"></p>
   <button onclick="finishPlanner()">Finish</button>
+  <button onclick="backHome()">Back</button>
 </section>
 
 <!-- GUESS GAME -->
@@ -161,6 +174,7 @@ th,td{
   <input id="studentName" placeholder="Name">
   <input id="studentClass" placeholder="Class">
   <button onclick="saveScore()">Save Score</button>
+  <button onclick="backHome()">Back</button>
 </section>
 
 <!-- LEADERBOARDS -->
@@ -169,11 +183,11 @@ th,td{
   <h3>Easy</h3><ul id="easyBoard"></ul>
   <h3>Medium</h3><ul id="mediumBoard"></ul>
   <h3>Hard</h3><ul id="hardBoard"></ul>
-  <button onclick="location.reload()">Home</button>
+  <button onclick="backHome()">Home</button>
 </section>
 
 <!-- TEACHER -->
-<section id="teacher" style="display:none">
+<section id="teacherSuite" style="display:none">
   <h2>👩‍🏫 Teacher Score Table</h2>
   <table>
     <thead>
@@ -181,13 +195,16 @@ th,td{
     </thead>
     <tbody id="teacherTable"></tbody>
   </table>
-  <button onclick="clearScores()">Clear Scores</button>
+  <canvas id="scoreChart" width="400" height="200"></canvas>
+  <canvas id="difficultyChart" width="400" height="200"></canvas>
+  <button onclick="backHome()">Back</button>
 </section>
 
 <!-- OWNER -->
 <section id="ownerSuite" style="display:none">
   <h2>🔒 Owner’s Suite</h2>
-  <button onclick="showTeacher()">View Teacher Table</button>
+  <button onclick="showTeacherSuite()">View Teacher Table</button>
+  <button onclick="logoutAll()">Logout All</button>
   <button onclick="location.reload()">Exit</button>
 </section>
 
@@ -195,11 +212,13 @@ th,td{
 
 <script>
 const LOGIN_CODE="SSS123";
+const TEACHER_CODE="SSSTEACHER26";
 const OWNER_CODE="1224";
 
 let score=0, round=0, maxRounds=5, clueLimit=4, points=20;
 let selected=[];
 let difficulty="easy";
+let startTime, endTime;
 
 const destinations=[
  {a:"Paris",c:["Eiffel Tower","Euro","Croissants","Spring","Romantic"]},
@@ -218,11 +237,27 @@ function checkLogin(){
   } else alert("Incorrect code");
 }
 
+// Teacher login
+function showTeacherLogin(){ login.style.display="none"; teacherLogin.style.display="block"; }
+function checkTeacher(){
+  if(teacherCodeInput.value===TEACHER_CODE){
+    teacherLogin.style.display="none";
+    showTeacherSuite();
+  } else alert("Incorrect teacher code");
+}
+
+function backHome(){
+  document.querySelectorAll("section").forEach(s=>s.style.display="none");
+  home.style.display="block";
+}
+
+// PLANNER & GUESS FUNCTIONS (same as before)
 function showPlanner(){ home.style.display="none"; planner.style.display="block"; }
 
 function showGuess(){
   difficulty=difficultySelect();
   score=0; round=0;
+  startTime=new Date();
 
   selected=[...destinations].sort(()=>Math.random()-0.5).slice(0,maxRounds);
   home.style.display="none";
@@ -253,12 +288,22 @@ function submitGuess(){
 function endGame(){
   guessGame.style.display="none";
   end.style.display="block";
-  scoreText.innerText=`Score: ${score} (${difficulty})`;
+  endTime=new Date();
+  let timeSpent = Math.floor((endTime - startTime)/1000);
+  scoreText.innerText=`Score: ${score} (${difficulty}) | Time spent: ${timeSpent} sec`;
 }
 
 function saveScore(){
   const data=JSON.parse(localStorage.getItem("scores")||"[]");
-  data.push({n:studentName.value,c:studentClass.value,s:score,d:difficulty,t:new Date().toLocaleString()});
+  const timeSpent = Math.floor((endTime - startTime)/1000);
+  data.push({
+    n:studentName.value,
+    c:studentClass.value,
+    s:score,
+    d:difficulty,
+    t:new Date().toLocaleString(),
+    time:timeSpent
+  });
   localStorage.setItem("scores",JSON.stringify(data));
   showBoards();
 }
@@ -273,6 +318,7 @@ function showBoards(){
   });
 }
 
+// OWNER FUNCTIONS
 function ownerAccess(){
   const c=prompt("Code please");
   if(c===OWNER_CODE){
@@ -280,18 +326,53 @@ function ownerAccess(){
     ownerSuite.style.display="block";
   }
 }
-
-function showTeacher(){
-  ownerSuite.style.display="none";
-  teacher.style.display="block";
-  teacherTable.innerHTML=JSON.parse(localStorage.getItem("scores")||"[]")
-    .map(x=>`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d}</td><td>${x.t}</td></tr>`).join("");
+function logoutAll(){
+  if(confirm("Clear all saved scores and log out everyone?")){
+    localStorage.removeItem("scores");
+    location.reload();
+  }
 }
 
-function clearScores(){
-  if(confirm("Clear all scores?")) localStorage.removeItem("scores");
+// TEACHER FUNCTIONS
+function showTeacherSuite(){
+  teacherSuite.style.display="block";
+  teacherTable.innerHTML="";
+  const scores=JSON.parse(localStorage.getItem("scores")||"[]");
+  scores.forEach(x=>{
+    teacherTable.innerHTML+=`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d}</td><td>${x.t}</td></tr>`;
+  });
+
+  // Score Chart (bar)
+  const ctx=document.getElementById('scoreChart').getContext('2d');
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:scores.map(x=>x.n),
+      datasets:[{
+        label:'Score',
+        data:scores.map(x=>x.s),
+        backgroundColor:'rgba(79,195,247,0.7)'
+      }]
+    }
+  });
+
+  // Difficulty Pie Chart
+  const diffCounts = {easy:0, medium:0, hard:0};
+  scores.forEach(x=>diffCounts[x.d]++);
+  const ctx2=document.getElementById('difficultyChart').getContext('2d');
+  new Chart(ctx2,{
+    type:'pie',
+    data:{
+      labels:['Easy','Medium','Hard'],
+      datasets:[{
+        data:[diffCounts.easy,diffCounts.medium,diffCounts.hard],
+        backgroundColor:['#4fc3f7','#f7b74f','#f74f4f']
+      }]
+    }
+  });
 }
 
+// STYLE TOGGLES
 function toggleContrast(){ document.body.classList.toggle("high-contrast"); }
 function toggleText(){ document.body.classList.toggle("large-text"); }
 </script>
