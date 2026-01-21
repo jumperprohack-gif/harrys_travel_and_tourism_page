@@ -2,11 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Travel And Tourism</title>
-
-<!-- Chart.js CDN -->
+<title>Travel And Tourism Full Version</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 :root{
   --bg: rgba(0,0,0,0.85);
@@ -85,7 +82,6 @@ th,td{
 }
 </style>
 </head>
-
 <body>
 
 <div id="siteTitle">Travel And Tourism</div>
@@ -93,7 +89,6 @@ th,td{
 <!-- LOGIN -->
 <section id="login">
   <h2>🔐 Access Required</h2>
-  <p>Please enter the access code</p>
   <input type="password" id="loginCode" placeholder="Enter code">
   <button onclick="checkLogin()">Enter</button>
   <p>Or <button onclick="showTeacherLogin()">Teacher Login</button></p>
@@ -116,10 +111,8 @@ th,td{
     <option value="medium">Medium</option>
     <option value="hard">Hard</option>
   </select><br>
-
   <button onclick="showPlanner()">🧳 Trip Planner</button>
   <button onclick="showGuess()">🧭 Guess the Destination</button><br><br>
-
   <button onclick="toggleContrast()">High Contrast</button>
   <button onclick="toggleText()">Large Text</button>
   <button onclick="logout()">Logout</button>
@@ -128,9 +121,11 @@ th,td{
 <!-- PLANNER -->
 <section id="planner" style="display:none">
   <h2>🧳 Trip Planner</h2>
-  <p id="budgetText">Budget: £0</p>
+  <p id="budgetText"></p>
+  <p>Name: <input id="plannerName" placeholder="Your Name"></p>
+  <p>Class: <input id="plannerClass" placeholder="Your Class"></p>
 
-  <select id="destinationSelect">
+  <select id="destinationSelect" onchange="updatePlannerCost()">
     <option value="0">Destination</option>
     <option value="500">Paris</option>
     <option value="700">New York</option>
@@ -138,27 +133,37 @@ th,td{
     <option value="600">Dubai</option>
   </select>
 
-  <select id="transportSelect">
+  <select id="transportSelect" onchange="updatePlannerCost()">
     <option value="0">Transport</option>
+    <option value="150">Coach</option>
     <option value="300">Plane</option>
-    <option value="150">Train</option>
-    <option value="100">Coach</option>
+    <option value="500">Plane (Premium)</option>
   </select>
 
-  <select id="accommodationSelect">
+  <select id="accommodationSelect" onchange="updatePlannerCost()">
     <option value="0">Accommodation</option>
-    <option value="600">Hotel</option>
     <option value="400">Hostel</option>
     <option value="500">Apartment</option>
+    <option value="600">Hotel</option>
   </select>
 
-  <p>
-    <input id="plannerName" placeholder="Your Name">
-    <input id="plannerClass" placeholder="Your Class">
-  </p>
+  <select id="foodSelect" onchange="updatePlannerCost()">
+    <option value="0">Food</option>
+    <option value="50">Budget Meals</option>
+    <option value="100">Normal Meals</option>
+    <option value="200">Luxury Meals</option>
+  </select>
+
+  <select id="activitySelect" multiple onchange="updatePlannerCost()">
+    <option value="0">Activities</option>
+    <option value="50">Museum</option>
+    <option value="100">City Tour</option>
+    <option value="150">Theme Park</option>
+    <option value="200">Luxury Experience</option>
+  </select>
 
   <p id="plannerResult"></p>
-  <button onclick="finishPlanner()">Finish</button>
+  <button onclick="finishPlanner()">Finish Trip</button>
   <button onclick="backHome()">Back</button>
   <button onclick="logout()">Logout</button>
 </section>
@@ -177,7 +182,6 @@ th,td{
 <section id="end" style="display:none">
   <h2>Final Score</h2>
   <p id="scoreText"></p>
-
   <input id="studentName" placeholder="Name">
   <input id="studentClass" placeholder="Class">
   <button onclick="saveScore()">Save Score</button>
@@ -224,15 +228,16 @@ th,td{
 
 <script>
 const LOGIN_CODE="SSS123";
-const TEACHER_CODE="SSSTEACHER26";
+const TEACHER_CODE="TEACH456";
 const OWNER_CODE="1224";
 
+// =================== GLOBAL VARIABLES ===================
 let score=0, round=0, maxRounds=5, clueLimit=4, points=20;
 let selected=[];
 let difficulty="easy";
 let startTime, endTime;
 let isLoggedIn=false;
-let plannerBudget=0;
+let plannerBudget=0, extraFees=0;
 
 const destinations=[
  {a:"Paris",c:["Eiffel Tower","Euro","Croissants","Spring","Romantic"]},
@@ -244,13 +249,14 @@ const destinations=[
  {a:"Sydney",c:["Opera House","AUD","Beaches","Summer","Harbour"]}
 ];
 
-// ===== LOGIN =====
+// =================== LOGIN FUNCTIONS ===================
 function checkLogin(){
-  if(loginCode.value===LOGIN_CODE){
+  const code = document.getElementById("loginCode").value;
+  if(code === LOGIN_CODE){
     isLoggedIn=true;
     login.style.display="none";
     home.style.display="block";
-  } else alert("Incorrect code");
+  } else { alert("Incorrect code"); }
 }
 
 function showTeacherLogin(){ 
@@ -270,7 +276,6 @@ function backToLogin(){
   login.style.display="block";
 }
 
-// ===== LOGOUT =====
 function logout(){
   isLoggedIn=false;
   score=0; round=0; selected=[];
@@ -279,41 +284,70 @@ function logout(){
 }
 
 function logoutAll(){
-  if(confirm("Clear all saved scores and log out everyone?")){
+  if(confirm("Clear all scores and log out everyone?")){
     localStorage.removeItem("scores");
     localStorage.removeItem("plannerScores");
     location.reload();
   }
 }
 
-// ===== PLANNER =====
-function showPlanner(){ 
-  home.style.display="none"; 
-  planner.style.display="block"; 
+// =================== TRIP PLANNER ===================
+function showPlanner(){
+  home.style.display="none";
+  planner.style.display="block";
+  startPlanner();
+}
 
+function startPlanner(){
   plannerBudget = Math.floor(Math.random()*(5000-1500+1))+1500;
-  document.getElementById('budgetText').innerText=`Budget: £${plannerBudget}`;
+  extraFees = Math.floor(Math.random()*200);
+  document.getElementById('budgetText').innerText = `Budget: £${plannerBudget} (Extra Fees: £${extraFees} may apply)`;
+  destinationSelect.value=transportSelect.value=accommodationSelect.value=foodSelect.value="0";
+  activitySelect.value="0";
+  plannerResult.innerText = "";
+}
+
+function updatePlannerCost(){
+  const dest = parseInt(destinationSelect.value)||0;
+  const transport = parseInt(transportSelect.value)||0;
+  const accommodation = parseInt(accommodationSelect.value)||0;
+  const food = parseInt(foodSelect.value)||0;
+  const activities = Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0);
+  const totalCost = dest + transport + accommodation + food + activities + extraFees;
+  plannerResult.innerText = `Total Cost: £${totalCost} (Budget: £${plannerBudget})`;
 }
 
 function finishPlanner(){
-  const selects=[destinationSelect,transportSelect,accommodationSelect];
-  let plannerScore=0;
-  selects.forEach(s=>{ if(s.value!=="0") plannerScore++; });
-  let scaledScore=Math.round((plannerScore/selects.length)*5);
+  const dest = parseInt(destinationSelect.value)||0;
+  const transport = parseInt(transportSelect.value)||0;
+  const accommodation = parseInt(accommodationSelect.value)||0;
+  const food = parseInt(foodSelect.value)||0;
+  const activities = Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0);
+  let totalCost = dest + transport + accommodation + food + activities + extraFees;
 
-  const name=plannerName.value||"Anonymous";
-  const studentClass=plannerClass.value||"Unknown";
+  let score = 0;
+  if(dest>0) score++;
+  if(transport>0) score++;
+  if(accommodation>0) score++;
+  if(food>0) score++;
+  if(activities>0) score++;
 
-  alert(`Trip Planner completed! Score: ${scaledScore}/5`);
+  if(totalCost <= plannerBudget) score++; // Bonus
 
-  const plannerScores=JSON.parse(localStorage.getItem('plannerScores')||"[]");
-  plannerScores.push({ n:name, c:studentClass, s:scaledScore, max:5, t:new Date().toLocaleString() });
+  if(score>5) score=5;
+
+  const name = plannerName.value||"Anonymous";
+  const studentClass = plannerClass.value||"Unknown";
+
+  const plannerScores = JSON.parse(localStorage.getItem('plannerScores')||"[]");
+  plannerScores.push({n:name,c:studentClass,s:score,max:5,t:new Date().toLocaleString()});
   localStorage.setItem('plannerScores',JSON.stringify(plannerScores));
 
+  alert(`Trip Finished!\nTotal Cost: £${totalCost}\nRemaining Budget: £${plannerBudget-totalCost}\nScore: ${score}/5`);
   backHome();
 }
 
-// ===== GUESS GAME =====
+// =================== GUESS GAME ===================
 function showGuess(){
   difficulty=difficultySelect();
   score=0; round=0; startTime=new Date();
@@ -330,28 +364,22 @@ function difficultySelect(){
   return d||"easy";
 }
 
-// ===== REAL DIFFICULTY ROUND LOADING =====
 function loadRound(){
-  if(round>=selected.length){ endGame(); return; }
-
+  if(round>=selected.length){ endGuessGame(); return; }
   roundText.innerText=`Round ${round+1}/${selected.length}`;
-
   let cluesToShow = selected[round].c.slice(0, clueLimit);
 
-  // Add decoy clues for medium/hard
   if(difficulty === "medium"){
-    const decoys = ["Food", "Music", "Beach", "River", "Mountain"];
+    const decoys = ["Food","Music","Beach","River","Mountain"];
     cluesToShow = [...cluesToShow, decoys[Math.floor(Math.random()*decoys.length)]];
     cluesToShow.sort(() => Math.random() - 0.5);
   } else if(difficulty === "hard"){
-    const decoys = ["Sun", "Moon", "Car", "Book", "Festival"];
+    const decoys = ["Sun","Moon","Car","Book","Festival"];
     cluesToShow = [cluesToShow[0]||"", decoys[Math.floor(Math.random()*decoys.length)]];
     cluesToShow.sort(() => Math.random() - 0.5);
   }
 
   clues.innerHTML = cluesToShow.map(x=>"<li>"+x+"</li>").join("");
-
-  // Shuffle answer options so correct answer isn’t always last
   const shuffledOptions = destinations.map(d=>d.a).sort(() => Math.random() - 0.5);
   guess.innerHTML="<option>Select</option>"+shuffledOptions.map(x=>`<option>${x}</option>`).join("");
 }
@@ -361,7 +389,7 @@ function submitGuess(){
   round++; loadRound();
 }
 
-function endGame(){
+function endGuessGame(){
   guessGame.style.display="none";
   end.style.display="block";
   endTime=new Date();
@@ -369,7 +397,6 @@ function endGame(){
   scoreText.innerText=`Score: ${score} (${difficulty}) | Time: ${timeSpent} sec`;
 }
 
-// ===== SAVE SCORE =====
 function saveScore(){
   const data=JSON.parse(localStorage.getItem("scores")||"[]");
   const timeSpent=Math.floor((endTime-startTime)/1000);
@@ -387,7 +414,7 @@ function showBoards(){
   });
 }
 
-// ===== TEACHER =====
+// =================== TEACHER ===================
 function showTeacherSuite(){
   teacherSuite.style.display="block";
   teacherTable.innerHTML="";
@@ -397,8 +424,7 @@ function showTeacherSuite(){
   });
 
   // Guess Game Score Chart
-  const ctx=document.getElementById('scoreChart').getContext('2d');
-  new Chart(ctx,{
+  new Chart(document.getElementById('scoreChart').getContext('2d'),{
     type:'bar',
     data:{
       labels:scores.map(x=>x.n),
@@ -409,8 +435,7 @@ function showTeacherSuite(){
   // Difficulty Pie Chart
   const diffCounts={easy:0, medium:0, hard:0};
   scores.forEach(x=>diffCounts[x.d]++);
-  const ctx2=document.getElementById('difficultyChart').getContext('2d');
-  new Chart(ctx2,{
+  new Chart(document.getElementById('difficultyChart').getContext('2d'),{
     type:'pie',
     data:{
       labels:['Easy','Medium','Hard'],
@@ -420,32 +445,31 @@ function showTeacherSuite(){
 
   // Trip Planner Chart
   const plannerScores=JSON.parse(localStorage.getItem('plannerScores')||"[]");
-  const ctx3=document.getElementById('plannerChart').getContext('2d');
-  new Chart(ctx3,{
+  new Chart(document.getElementById('plannerChart').getContext('2d'),{
     type:'bar',
     data:{
       labels:plannerScores.map(x=>x.n),
-      datasets:[{ label:'Trip Planner Score (out of 5)', data:plannerScores.map(x=>x.s), backgroundColor:'rgba(247,79,158,0.7)' }]
-    },
-    options:{ scales:{ y:{ beginAtZero:true, max:5 } } }
+      datasets:[{ label:'Trip Planner Score', data:plannerScores.map(x=>x.s), backgroundColor:'rgba(0,255,128,0.6)' }]
+    }
   });
 }
 
-// ===== OWNER =====
-function ownerAccess(){
-  const c=prompt("Code please");
-  if(c===OWNER_CODE){ home.style.display="none"; ownerSuite.style.display="block"; }
-}
-
-// ===== STYLE =====
+// =================== STYLING ===================
 function toggleContrast(){ document.body.classList.toggle("high-contrast"); }
 function toggleText(){ document.body.classList.toggle("large-text"); }
-function backHome(){
+function backHome(){ 
   document.querySelectorAll("section").forEach(s=>s.style.display="none");
-  if(isLoggedIn) home.style.display="block";
-  else login.style.display="block";
+  home.style.display="block"; 
+}
+
+// =================== OWNER ===================
+function ownerAccess(){
+  const c=prompt("Code please");
+  if(c===OWNER_CODE){
+    home.style.display="none";
+    ownerSuite.style.display="block";
+  }
 }
 </script>
-
 </body>
 </html>
