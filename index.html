@@ -186,7 +186,6 @@ th,td{
   <h2>❓ Travel Quiz Game</h2>
   <p id="quizQuestion"></p>
   <div id="quizOptions"></div>
-  <button onclick="submitQuiz()">Submit Answer</button>
   <button onclick="backHome()">Back</button>
   <button onclick="logout()">Logout</button>
 </section>
@@ -230,81 +229,87 @@ th,td{
 <div id="secretBtn" onclick="ownerAccess()"></div>
 
 <script>
-// =================== LOGIN & LOGOUT ===================
+// =================== LOGIN/LOGOUT ===================
 const LOGIN_CODE="SSS123";
-const TEACHER_CODE="TEACH456";
+const TEACHER_CODE="SSSTEACHER123";
 const OWNER_CODE="1224";
-let isLoggedIn=false;
 
 function checkLogin(){
   if(document.getElementById("loginCode").value===LOGIN_CODE){
-    isLoggedIn=true;
     login.style.display="none"; home.style.display="block";
   } else alert("Incorrect code");
 }
-
 function showTeacherLogin(){ login.style.display="none"; teacherLogin.style.display="block"; }
-function checkTeacher(){ if(document.getElementById("teacherCodeInput").value===TEACHER_CODE){ teacherLogin.style.display="none"; showTeacherSuite(); } else alert("Incorrect teacher code"); }
+function checkTeacher(){ if(document.getElementById("teacherCodeInput").value===TEACHER_CODE){ teacherLogin.style.display="none"; showTeacherSuite(); } else alert("Incorrect code"); }
 function backToLogin(){ document.querySelectorAll("section").forEach(s=>s.style.display="none"); login.style.display="block"; }
 function logout(){ document.querySelectorAll("section").forEach(s=>s.style.display="none"); login.style.display="block"; }
 function logoutAll(){ localStorage.removeItem("scores"); localStorage.removeItem("plannerScores"); localStorage.removeItem("quizScores"); localStorage.removeItem("memoryScores"); location.reload(); }
-
-// =================== STYLING ===================
 function toggleContrast(){ document.body.classList.toggle("high-contrast"); }
 function toggleText(){ document.body.classList.toggle("large-text"); }
 function backHome(){ document.querySelectorAll("section").forEach(s=>s.style.display="none"); home.style.display="block"; }
-
-// =================== OWNER ACCESS ===================
-function ownerAccess(){ const c=prompt("Code please"); if(c===OWNER_CODE){ home.style.display="none"; ownerSuite.style.display="block"; } }
+function ownerAccess(){ const c=prompt("Owner Code"); if(c===OWNER_CODE){ home.style.display="none"; ownerSuite.style.display="block"; } }
 function clearAllData(){ if(confirm("Delete all scores?")){ localStorage.removeItem("scores"); localStorage.removeItem("plannerScores"); localStorage.removeItem("quizScores"); localStorage.removeItem("memoryScores"); alert("All data cleared!"); } }
 
-// =================== PLACEHOLDER FOR GAMES ===================
-// Trip Planner, Guess Game, Quiz Game, Memory Game code (from previous messages) would go here
-// This includes: finishPlanner(), showGuess(), submitGuess(), showQuiz(), loadQuizQuestion(), showMemory(), flipMemoryCard(), etc.
+// =================== TRIP PLANNER ===================
+let plannerBudget=2000;
+function updatePlannerCost(){
+  let dest = parseInt(destinationSelect.value);
+  let transport = parseInt(transportSelect.value);
+  let accom = parseInt(accommodationSelect.value);
+  let food = parseInt(foodSelect.value);
+  let activities = Array.from(activitySelect.selectedOptions).reduce((a,o)=>a+parseInt(o.value),0);
+  let extra = Math.floor(Math.random()*100);
+  plannerBudget=2000-(dest+transport+accom+food+activities+extra);
+  plannerResult.innerText=`Total Cost: £${dest+transport+accom+food+activities+extra}, Remaining Budget: £${plannerBudget}`;
+}
+function finishPlanner(){
+  let name=plannerName.value||"Anonymous", cls=plannerClass.value||"Unknown";
+  let dest = parseInt(destinationSelect.value);
+  let transport = parseInt(transportSelect.value);
+  let accom = parseInt(accommodationSelect.value);
+  let food = parseInt(foodSelect.value);
+  let activities = Array.from(activitySelect.selectedOptions).reduce((a,o)=>a+parseInt(o.value),0);
+  let total=dest+transport+accom+food+activities;
+  let s=0; if(total<=2000) s+=2; s+=Math.min(3,Math.floor(activities/50)); s=Math.min(5,s);
+  const data=JSON.parse(localStorage.getItem("plannerScores")||"[]");
+  data.push({n:name,c:cls,s:s,d:difficulty,t:new Date().toLocaleString()});
+  localStorage.setItem("plannerScores",JSON.stringify(data));
+  alert(`Trip Finished! Score: ${s}/5`);
+  backHome();
+}
 
-// =================== TEACHER SUITE CHARTS ===================
+// =================== GUESS GAME ===================
+const destinations=[{a:"Paris",c:["Eiffel Tower","Euro","Croissants","Spring","Romantic"]},{a:"Tokyo",c:["Yen","Sushi","Technology","Humid","Cherry Blossoms"]},{a:"Dubai",c:["Hot","Burj Khalifa","Dirham","Luxury","Desert"]},{a:"London",c:["Pound","Big Ben","Museums","Mild","Royal Family"]},{a:"New York",c:["Dollar","Statue of Liberty","Skyscrapers","Autumn","Broadway"]},{a:"Rome",c:["Colosseum","Pizza","Euro","Historic","Mediterranean"]},{a:"Sydney",c:["Opera House","AUD","Beaches","Summer","Harbour"]}];
+let score=0, round=0, maxRounds=5, clueLimit=4, points=20, selected=[];
+function showGuess(){ difficulty=document.getElementById("difficulty").value||"easy"; score=0; round=0; selected=[...destinations].sort(()=>Math.random()-0.5).slice(0,maxRounds); home.style.display="none"; guessGame.style.display="block"; loadRound(); }
+function loadRound(){ if(round>=selected.length){ endGuessGame(); return; } roundText.innerText=`Round ${round+1}/${selected.length}`; clues.innerHTML=selected[round].c.slice(0,clueLimit).map(x=>"<li>"+x+"</li>").join(""); guess.innerHTML="<option>Select</option>"+destinations.map(d=>`<option>${d.a}</option>`).join(""); }
+function submitGuess(){ score += (guess.value===selected[round].a)?points:-5; round++; loadRound(); }
+function endGuessGame(){ guessGame.style.display="none"; let name=prompt("Name for score:","Anonymous"); let cls=prompt("Class:","Unknown"); const data=JSON.parse(localStorage.getItem("scores")||"[]"); data.push({n:name,c:cls,s:score,d:difficulty,t:new Date().toLocaleString()}); localStorage.setItem("scores",JSON.stringify(data)); alert(`Guess Game Finished! Score: ${score}`); backHome(); }
+
+// =================== QUIZ GAME ===================
+const quizQuestions=[{q:"Which city has the Eiffel Tower?", a:["Paris","London","Rome","New York"], correct:"Paris"},{q:"What currency is used in Japan?", a:["Yen","Dollar","Euro","Pound"], correct:"Yen"},{q:"Which city is known for the Opera House?", a:["Sydney","Dubai","Tokyo","Paris"], correct:"Sydney"},{q:"The Colosseum is in which city?", a:["Rome","Paris","London","New York"], correct:"Rome"},{q:"Which city has the Burj Khalifa?", a:["Dubai","Tokyo","Paris","Rome"], correct:"Dubai"}];
+let quizIndex=0, quizScore=0;
+function showQuiz(){ quizIndex=0; quizScore=0; home.style.display="none"; quizGame.style.display="block"; loadQuizQuestion(); }
+function loadQuizQuestion(){ if(quizIndex>=quizQuestions.length){ endQuiz(); return; } const q=quizQuestions[quizIndex]; quizQuestion.innerText=q.q; quizOptions.innerHTML=""; q.a.sort(()=>Math.random()-0.5).forEach(opt=>{ const btn=document.createElement("button"); btn.innerText=opt; btn.onclick=()=>{ if(opt===q.correct) quizScore++; quizIndex++; loadQuizQuestion(); }; quizOptions.appendChild(btn); }); }
+function endQuiz(){ quizGame.style.display="none"; const selDiff=document.getElementById("difficulty").value||"easy"; if(selDiff==="medium") quizScore=Math.floor(quizScore*0.8); if(selDiff==="hard") quizScore=Math.floor(quizScore*0.6); let name=prompt("Name for Quiz:","Anonymous"); let cls=prompt("Class:","Unknown"); const data=JSON.parse(localStorage.getItem("quizScores")||"[]"); data.push({n:name,c:cls,s:quizScore,d:selDiff,t:new Date().toLocaleString()}); localStorage.setItem("quizScores",JSON.stringify(data)); alert(`Quiz Finished! Score: ${quizScore}`); backHome(); }
+
+// =================== MEMORY GAME ===================
+let memoryCards=["Paris","Tokyo","Dubai","London","New York","Rome","Sydney"], memoryBoardArray=[], flipped=[], matches=0;
+function showMemory(){ memoryBoardArray=[...memoryCards,...memoryCards].sort(()=>Math.random()-0.5); flipped=[]; matches=0; memoryMatches.innerText=matches; home.style.display="none"; memoryGame.style.display="block"; renderMemoryBoard(); }
+function renderMemoryBoard(){ memoryBoard.innerHTML=""; memoryBoardArray.forEach((val,i)=>{ const div=document.createElement("div"); div.className="card"; div.dataset.index=i; div.innerText=flipped.includes(i)||div.classList.contains("matched")?val:""; div.onclick=()=>flipMemoryCard(i,div,val); memoryBoard.appendChild(div); }); }
+function flipMemoryCard(i,div,val){ if(flipped.includes(i)||div.classList.contains("matched")) return; flipped.push(i); div.innerText=val; if(flipped.length===2){ const first=memoryBoardArray[flipped[0]], second=memoryBoardArray[flipped[1]]; if(first===second){ document.querySelectorAll(".card").forEach(c=>{ if(parseInt(c.dataset.index)===flipped[0]||parseInt(c.dataset.index)===flipped[1]) c.classList.add("matched"); }); matches++; memoryMatches.innerText=matches; } setTimeout(()=>{ flipped=[]; renderMemoryBoard(); if(matches===memoryCards.length) endMemoryGame(); },800); } }
+function endMemoryGame(){ memoryGame.style.display="none"; let memScore=matches; const selDiff=document.getElementById("difficulty").value||"easy"; if(selDiff==="medium") memScore=Math.floor(memScore*0.8); if(selDiff==="hard") memScore=Math.floor(memScore*0.6); let name=prompt("Name for Memory:","Anonymous"); let cls=prompt("Class:","Unknown"); const data=JSON.parse(localStorage.getItem("memoryScores")||"[]"); data.push({n:name,c:cls,s:memScore,d:selDiff,t:new Date().toLocaleString()}); localStorage.setItem("memoryScores",JSON.stringify(data)); alert(`Memory Finished! Score: ${memScore}`); backHome(); }
+
+// =================== TEACHER SUITE ===================
 function showTeacherSuite(){
-  teacherSuite.style.display="block";
-  teacherTable.innerHTML="";
-
-  const guessScores = JSON.parse(localStorage.getItem("scores")||"[]");
-  const plannerScores = JSON.parse(localStorage.getItem("plannerScores")||"[]");
-  const quizScores = JSON.parse(localStorage.getItem("quizScores")||"[]");
-  const memoryScores = JSON.parse(localStorage.getItem("memoryScores")||"[]");
-
-  [...guessScores, ...plannerScores, ...quizScores, ...memoryScores].forEach(x=>{
-    teacherTable.innerHTML+=`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d||x.game||'Game'}</td><td>${x.t}</td><td>${x.time||'-'}</td></tr>`;
-  });
-
-  // Guess Scores Chart
-  new Chart(document.getElementById('scoreChart').getContext('2d'),{
-    type:'bar',
-    data:{ labels:guessScores.map(x=>x.n), datasets:[{label:'Guess Game', data:guessScores.map(x=>x.s), backgroundColor:'rgba(79,195,247,0.7)'}] }
-  });
-  // Planner Chart
-  new Chart(document.getElementById('plannerChart').getContext('2d'),{
-    type:'bar',
-    data:{ labels:plannerScores.map(x=>x.n), datasets:[{label:'Trip Planner', data:plannerScores.map(x=>x.s), backgroundColor:'rgba(0,255,128,0.6)'}] }
-  });
-  // Quiz Chart
-  new Chart(document.getElementById('quizChart').getContext('2d'),{
-    type:'bar',
-    data:{ labels:quizScores.map(x=>x.n), datasets:[{label:'Travel Quiz', data:quizScores.map(x=>x.s), backgroundColor:'rgba(255,165,0,0.7)'}] }
-  });
-  // Memory Chart
-  new Chart(document.getElementById('memoryChart').getContext('2d'),{
-    type:'bar',
-    data:{ labels:memoryScores.map(x=>x.n), datasets:[{label:'Memory Game', data:memoryScores.map(x=>x.s), backgroundColor:'rgba(255,0,128,0.7)'}] }
-  });
-
-  // Difficulty Pie
-  const allScores = [...guessScores, ...plannerScores, ...quizScores, ...memoryScores];
-  const diffCounts = {easy:0, medium:0, hard:0};
-  allScores.forEach(x=>{ const d=x.d||"easy"; diffCounts[d]++; });
-  new Chart(document.getElementById('difficultyChart').getContext('2d'),{
-    type:'pie',
-    data:{ labels:['Easy','Medium','Hard'], datasets:[{data:[diffCounts.easy,diffCounts.medium,diffCounts.hard], backgroundColor:['#4fc3f7','#f7b74f','#f74f4f']}] }
-  });
+  document.querySelectorAll("section").forEach(s=>s.style.display="none"); teacherSuite.style.display="block";
+  const table=document.getElementById("teacherTable"); table.innerHTML="";
+  const allScores=[...JSON.parse(localStorage.getItem("scores")||"[]"),...JSON.parse(localStorage.getItem("plannerScores")||"[]"),...JSON.parse(localStorage.getItem("quizScores")||"[]"),...JSON.parse(localStorage.getItem("memoryScores")||"[]")];
+  allScores.forEach(x=>{ table.innerHTML+=`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d}</td><td>${x.t}</td><td>—</td></tr>`; });
+  // Generate Charts
+  const games=["Planner","Quiz","Memory","Guess"];
+  const scoresPerGame=[JSON.parse(localStorage.getItem("plannerScores")||"[]").reduce((a,b)=>a+b.s,0), JSON.parse(localStorage.getItem("quizScores")||"[]").reduce((a,b)=>a+b.s,0), JSON.parse(localStorage.getItem("memoryScores")||"[]").reduce((a,b)=>a+b.s,0), JSON.parse(localStorage.getItem("scores")||"[]").reduce((a,b)=>a+b.s,0)];
+  new Chart(scoreChart,{type:"bar",data:{labels:games,datasets:[{label:"Total Scores",data:scoresPerGame,backgroundColor:["#4fc3f7","#f77","#7ff"]}]}});  
 }
 </script>
 </body>
