@@ -104,13 +104,12 @@ th,td{
   <h2>👩‍🏫 Teacher Login</h2>
   <input type="password" id="teacherCodeInput" placeholder="Teacher code">
   <button onclick="checkTeacher()">Login</button>
-  <button onclick="backHome()">Back</button>
+  <button onclick="backToLogin()">Back</button>
 </section>
 
 <!-- HOME -->
 <section id="home" style="display:none">
   <h2>Welcome</h2>
-
   <select id="difficulty">
     <option value="">Select Difficulty</option>
     <option value="easy">Easy</option>
@@ -123,6 +122,7 @@ th,td{
 
   <button onclick="toggleContrast()">High Contrast</button>
   <button onclick="toggleText()">Large Text</button>
+  <button onclick="logout()">Logout</button>
 </section>
 
 <!-- PLANNER -->
@@ -130,7 +130,7 @@ th,td{
   <h2>🧳 Trip Planner</h2>
   <p id="budgetText">Budget: £2000</p>
 
-  <select onchange="updateBudget(this.value)">
+  <select id="destinationSelect">
     <option value="0">Destination</option>
     <option value="500">Paris</option>
     <option value="700">New York</option>
@@ -138,14 +138,14 @@ th,td{
     <option value="600">Dubai</option>
   </select>
 
-  <select onchange="updateBudget(this.value)">
+  <select id="transportSelect">
     <option value="0">Transport</option>
     <option value="300">Plane</option>
     <option value="150">Train</option>
     <option value="100">Coach</option>
   </select>
 
-  <select onchange="updateBudget(this.value)">
+  <select id="accommodationSelect">
     <option value="0">Accommodation</option>
     <option value="600">Hotel</option>
     <option value="400">Hostel</option>
@@ -155,6 +155,7 @@ th,td{
   <p id="plannerResult"></p>
   <button onclick="finishPlanner()">Finish</button>
   <button onclick="backHome()">Back</button>
+  <button onclick="logout()">Logout</button>
 </section>
 
 <!-- GUESS GAME -->
@@ -164,6 +165,7 @@ th,td{
   <ul id="clues"></ul>
   <select id="guess"></select><br>
   <button onclick="submitGuess()">Submit</button>
+  <button onclick="logout()">Logout</button>
 </section>
 
 <!-- END -->
@@ -175,6 +177,7 @@ th,td{
   <input id="studentClass" placeholder="Class">
   <button onclick="saveScore()">Save Score</button>
   <button onclick="backHome()">Back</button>
+  <button onclick="logout()">Logout</button>
 </section>
 
 <!-- LEADERBOARDS -->
@@ -184,6 +187,7 @@ th,td{
   <h3>Medium</h3><ul id="mediumBoard"></ul>
   <h3>Hard</h3><ul id="hardBoard"></ul>
   <button onclick="backHome()">Home</button>
+  <button onclick="logout()">Logout</button>
 </section>
 
 <!-- TEACHER -->
@@ -191,13 +195,14 @@ th,td{
   <h2>👩‍🏫 Teacher Score Table</h2>
   <table>
     <thead>
-      <tr><th>Name</th><th>Class</th><th>Score</th><th>Difficulty</th><th>Date</th></tr>
+      <tr><th>Name</th><th>Class</th><th>Score</th><th>Difficulty</th><th>Date</th><th>Time (s)</th></tr>
     </thead>
     <tbody id="teacherTable"></tbody>
   </table>
   <canvas id="scoreChart" width="400" height="200"></canvas>
   <canvas id="difficultyChart" width="400" height="200"></canvas>
-  <button onclick="backHome()">Back</button>
+  <button onclick="backToLogin()">Back</button>
+  <button onclick="logout()">Logout</button>
 </section>
 
 <!-- OWNER -->
@@ -219,6 +224,7 @@ let score=0, round=0, maxRounds=5, clueLimit=4, points=20;
 let selected=[];
 let difficulty="easy";
 let startTime, endTime;
+let isLoggedIn=false;
 
 const destinations=[
  {a:"Paris",c:["Eiffel Tower","Euro","Croissants","Spring","Romantic"]},
@@ -230,15 +236,20 @@ const destinations=[
  {a:"Sydney",c:["Opera House","AUD","Beaches","Summer","Harbour"]}
 ];
 
+// ===== LOGIN FUNCTIONS =====
 function checkLogin(){
   if(loginCode.value===LOGIN_CODE){
+    isLoggedIn = true;
     login.style.display="none";
     home.style.display="block";
   } else alert("Incorrect code");
 }
 
-// Teacher login
-function showTeacherLogin(){ login.style.display="none"; teacherLogin.style.display="block"; }
+function showTeacherLogin(){ 
+  login.style.display="none"; 
+  teacherLogin.style.display="block"; 
+}
+
 function checkTeacher(){
   if(teacherCodeInput.value===TEACHER_CODE){
     teacherLogin.style.display="none";
@@ -246,22 +257,43 @@ function checkTeacher(){
   } else alert("Incorrect teacher code");
 }
 
-function backHome(){
+function backToLogin(){
   document.querySelectorAll("section").forEach(s=>s.style.display="none");
-  home.style.display="block";
+  login.style.display="block";
 }
 
-// PLANNER & GUESS FUNCTIONS (same as before)
+// ===== LOGOUT FUNCTION =====
+function logout(){
+  isLoggedIn = false;
+  score=0; round=0; selected=[];
+  document.querySelectorAll("section").forEach(s=>s.style.display="none");
+  login.style.display="block";
+}
+
+// ===== PLANNER =====
 function showPlanner(){ home.style.display="none"; planner.style.display="block"; }
 
+function finishPlanner() {
+  const selects = [destinationSelect, transportSelect, accommodationSelect];
+  let plannerScore = 0;
+  selects.forEach(s => { if(s.value !== "0") plannerScore++; });
+  const scaledScore = Math.round((plannerScore / selects.length) * 5);
+  alert(`Trip Planner completed! Score: ${scaledScore}/5`);
+
+  // Save planner score (optional)
+  const plannerScores = JSON.parse(localStorage.getItem('plannerScores')||"[]");
+  plannerScores.push({ n:"Planner User", s:scaledScore, max:5, t:new Date().toLocaleString() });
+  localStorage.setItem('plannerScores', JSON.stringify(plannerScores));
+
+  backHome();
+}
+
+// ===== GUESS GAME =====
 function showGuess(){
   difficulty=difficultySelect();
-  score=0; round=0;
-  startTime=new Date();
-
+  score=0; round=0; startTime=new Date();
   selected=[...destinations].sort(()=>Math.random()-0.5).slice(0,maxRounds);
-  home.style.display="none";
-  guessGame.style.display="block";
+  home.style.display="none"; guessGame.style.display="block";
   loadRound();
 }
 
@@ -281,7 +313,7 @@ function loadRound(){
 }
 
 function submitGuess(){
-  score += (guess.value===selected[round].a) ? points : -5;
+  score += (guess.value===selected[round].a)? points : -5;
   round++; loadRound();
 }
 
@@ -289,92 +321,83 @@ function endGame(){
   guessGame.style.display="none";
   end.style.display="block";
   endTime=new Date();
-  let timeSpent = Math.floor((endTime - startTime)/1000);
-  scoreText.innerText=`Score: ${score} (${difficulty}) | Time spent: ${timeSpent} sec`;
+  const timeSpent = Math.floor((endTime - startTime)/1000);
+  scoreText.innerText=`Score: ${score} (${difficulty}) | Time: ${timeSpent} sec`;
 }
 
+// ===== SAVE SCORE =====
 function saveScore(){
   const data=JSON.parse(localStorage.getItem("scores")||"[]");
   const timeSpent = Math.floor((endTime - startTime)/1000);
-  data.push({
-    n:studentName.value,
-    c:studentClass.value,
-    s:score,
-    d:difficulty,
-    t:new Date().toLocaleString(),
-    time:timeSpent
-  });
+  data.push({ n:studentName.value, c:studentClass.value, s:score, d:difficulty, t:new Date().toLocaleString(), time:timeSpent });
   localStorage.setItem("scores",JSON.stringify(data));
   showBoards();
 }
 
 function showBoards(){
-  end.style.display="none";
-  leaderboards.style.display="block";
+  end.style.display="none"; leaderboards.style.display="block";
   ["easy","medium","hard"].forEach(d=>{
-    const list=JSON.parse(localStorage.getItem("scores")||"[]")
-      .filter(x=>x.d===d).sort((a,b)=>b.s-a.s).slice(0,5);
+    const list=JSON.parse(localStorage.getItem("scores")||"[]").filter(x=>x.d===d)
+      .sort((a,b)=>b.s-a.s).slice(0,5);
     document.getElementById(d+"Board").innerHTML=list.map(x=>`<li>${x.n} (${x.s})</li>`).join("");
   });
 }
 
-// OWNER FUNCTIONS
+// ===== OWNER FUNCTIONS =====
 function ownerAccess(){
   const c=prompt("Code please");
-  if(c===OWNER_CODE){
-    home.style.display="none";
-    ownerSuite.style.display="block";
-  }
+  if(c===OWNER_CODE){ home.style.display="none"; ownerSuite.style.display="block"; }
 }
+
 function logoutAll(){
   if(confirm("Clear all saved scores and log out everyone?")){
     localStorage.removeItem("scores");
+    localStorage.removeItem("plannerScores");
     location.reload();
   }
 }
 
-// TEACHER FUNCTIONS
+// ===== TEACHER FUNCTIONS =====
 function showTeacherSuite(){
   teacherSuite.style.display="block";
   teacherTable.innerHTML="";
   const scores=JSON.parse(localStorage.getItem("scores")||"[]");
   scores.forEach(x=>{
-    teacherTable.innerHTML+=`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d}</td><td>${x.t}</td></tr>`;
+    teacherTable.innerHTML+=`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d}</td><td>${x.t}</td><td>${x.time||0}</td></tr>`;
   });
 
-  // Score Chart (bar)
+  // Score Bar Chart
   const ctx=document.getElementById('scoreChart').getContext('2d');
   new Chart(ctx,{
     type:'bar',
     data:{
       labels:scores.map(x=>x.n),
-      datasets:[{
-        label:'Score',
-        data:scores.map(x=>x.s),
-        backgroundColor:'rgba(79,195,247,0.7)'
-      }]
+      datasets:[{ label:'Score', data:scores.map(x=>x.s), backgroundColor:'rgba(79,195,247,0.7)' }]
     }
   });
 
   // Difficulty Pie Chart
-  const diffCounts = {easy:0, medium:0, hard:0};
+  const diffCounts={easy:0, medium:0, hard:0};
   scores.forEach(x=>diffCounts[x.d]++);
   const ctx2=document.getElementById('difficultyChart').getContext('2d');
   new Chart(ctx2,{
     type:'pie',
     data:{
       labels:['Easy','Medium','Hard'],
-      datasets:[{
-        data:[diffCounts.easy,diffCounts.medium,diffCounts.hard],
-        backgroundColor:['#4fc3f7','#f7b74f','#f74f4f']
-      }]
+      datasets:[{ data:[diffCounts.easy,diffCounts.medium,diffCounts.hard], backgroundColor:['#4fc3f7','#f7b74f','#f74f4f'] }]
     }
   });
 }
 
-// STYLE TOGGLES
+// ===== STYLE TOGGLES =====
 function toggleContrast(){ document.body.classList.toggle("high-contrast"); }
 function toggleText(){ document.body.classList.toggle("large-text"); }
+
+function backHome(){
+  document.querySelectorAll("section").forEach(s=>s.style.display="none");
+  if(isLoggedIn) home.style.display="block";
+  else login.style.display="block";
+}
 </script>
 
 </body>
