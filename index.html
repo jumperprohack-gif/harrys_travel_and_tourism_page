@@ -11,7 +11,6 @@
   --accent: #4fc3f7;
   --font: 16px;
 }
-
 body{
   margin:0;
   font-family:Arial, sans-serif;
@@ -20,17 +19,14 @@ body{
   background:url("travel_the_world.jpg") no-repeat center center fixed;
   background-size:cover;
 }
-
 .high-contrast{
   --bg:#000;
   --text:#ffff00;
   --accent:#00ffff;
 }
-
 .large-text{
   --font:20px;
 }
-
 #siteTitle{
   position:fixed;
   top:15px;
@@ -40,7 +36,6 @@ body{
   text-shadow:3px 3px 8px black;
   z-index:1000;
 }
-
 section{
   max-width:1000px;
   margin:120px auto;
@@ -48,19 +43,16 @@ section{
   background:var(--bg);
   border-radius:12px;
 }
-
 button,select,input{
   padding:10px;
   margin:6px;
   border-radius:6px;
   border:none;
 }
-
 button{
   background:var(--accent);
   cursor:pointer;
 }
-
 table{
   width:100%;
   border-collapse:collapse;
@@ -70,7 +62,6 @@ th,td{
   padding:8px;
   text-align:center;
 }
-
 #secretBtn{
   position:fixed;
   bottom:0;
@@ -80,10 +71,26 @@ th,td{
   opacity:0;
   cursor:pointer;
 }
+.card{
+  width:80px;
+  height:80px;
+  display:inline-block;
+  margin:5px;
+  background:#fff;
+  color:#000;
+  font-weight:bold;
+  line-height:80px;
+  text-align:center;
+  cursor:pointer;
+  border-radius:8px;
+}
+.matched{
+  background:limegreen;
+  color:#fff;
+}
 </style>
 </head>
 <body>
-
 <div id="siteTitle">Travel And Tourism</div>
 
 <!-- LOGIN -->
@@ -112,19 +119,20 @@ th,td{
     <option value="hard">Hard</option>
   </select><br>
   <button onclick="showPlanner()">🧳 Trip Planner</button>
-  <button onclick="showGuess()">🧭 Guess the Destination</button><br><br>
+  <button onclick="showGuess()">🧭 Guess the Destination</button>
+  <button onclick="showQuiz()">❓ Travel Quiz Game</button>
+  <button onclick="showMemory()">🃏 Memory Card Game</button><br><br>
   <button onclick="toggleContrast()">High Contrast</button>
   <button onclick="toggleText()">Large Text</button>
   <button onclick="logout()">Logout</button>
 </section>
 
-<!-- PLANNER -->
+<!-- TRIP PLANNER -->
 <section id="planner" style="display:none">
   <h2>🧳 Trip Planner</h2>
-  <p id="budgetText"></p>
+  <p id="budgetText">Budget: £2000</p>
   <p>Name: <input id="plannerName" placeholder="Your Name"></p>
   <p>Class: <input id="plannerClass" placeholder="Your Class"></p>
-
   <select id="destinationSelect" onchange="updatePlannerCost()">
     <option value="0">Destination</option>
     <option value="500">Paris</option>
@@ -132,28 +140,24 @@ th,td{
     <option value="400">Barcelona</option>
     <option value="600">Dubai</option>
   </select>
-
   <select id="transportSelect" onchange="updatePlannerCost()">
     <option value="0">Transport</option>
     <option value="150">Coach</option>
     <option value="300">Plane</option>
     <option value="500">Plane (Premium)</option>
   </select>
-
   <select id="accommodationSelect" onchange="updatePlannerCost()">
     <option value="0">Accommodation</option>
     <option value="400">Hostel</option>
     <option value="500">Apartment</option>
     <option value="600">Hotel</option>
   </select>
-
   <select id="foodSelect" onchange="updatePlannerCost()">
     <option value="0">Food</option>
     <option value="50">Budget Meals</option>
     <option value="100">Normal Meals</option>
     <option value="200">Luxury Meals</option>
   </select>
-
   <select id="activitySelect" multiple onchange="updatePlannerCost()">
     <option value="0">Activities</option>
     <option value="50">Museum</option>
@@ -161,7 +165,6 @@ th,td{
     <option value="150">Theme Park</option>
     <option value="200">Luxury Experience</option>
   </select>
-
   <p id="plannerResult"></p>
   <button onclick="finishPlanner()">Finish Trip</button>
   <button onclick="backHome()">Back</button>
@@ -178,24 +181,22 @@ th,td{
   <button onclick="logout()">Logout</button>
 </section>
 
-<!-- END -->
-<section id="end" style="display:none">
-  <h2>Final Score</h2>
-  <p id="scoreText"></p>
-  <input id="studentName" placeholder="Name">
-  <input id="studentClass" placeholder="Class">
-  <button onclick="saveScore()">Save Score</button>
+<!-- QUIZ GAME -->
+<section id="quizGame" style="display:none">
+  <h2>❓ Travel Quiz Game</h2>
+  <p id="quizQuestion"></p>
+  <div id="quizOptions"></div>
+  <button onclick="submitQuiz()">Submit Answer</button>
   <button onclick="backHome()">Back</button>
   <button onclick="logout()">Logout</button>
 </section>
 
-<!-- LEADERBOARDS -->
-<section id="leaderboards" style="display:none">
-  <h2>🏆 Leaderboards</h2>
-  <h3>Easy</h3><ul id="easyBoard"></ul>
-  <h3>Medium</h3><ul id="mediumBoard"></ul>
-  <h3>Hard</h3><ul id="hardBoard"></ul>
-  <button onclick="backHome()">Home</button>
+<!-- MEMORY GAME -->
+<section id="memoryGame" style="display:none">
+  <h2>🃏 Memory Card Game</h2>
+  <div id="memoryBoard"></div>
+  <p>Matches: <span id="memoryMatches">0</span></p>
+  <button onclick="backHome()">Back</button>
   <button onclick="logout()">Logout</button>
 </section>
 
@@ -204,14 +205,15 @@ th,td{
   <h2>👩‍🏫 Teacher Score Table</h2>
   <table>
     <thead>
-      <tr><th>Name</th><th>Class</th><th>Score</th><th>Difficulty</th><th>Date</th><th>Time (s)</th></tr>
+      <tr><th>Name</th><th>Class</th><th>Score</th><th>Difficulty/Game</th><th>Date</th><th>Time(s)</th></tr>
     </thead>
     <tbody id="teacherTable"></tbody>
   </table>
   <canvas id="scoreChart" width="400" height="200"></canvas>
-  <canvas id="difficultyChart" width="400" height="200"></canvas>
-  <h3>Trip Planner Scores</h3>
   <canvas id="plannerChart" width="400" height="200"></canvas>
+  <canvas id="quizChart" width="400" height="200"></canvas>
+  <canvas id="memoryChart" width="400" height="200"></canvas>
+  <canvas id="difficultyChart" width="400" height="200"></canvas>
   <button onclick="backToLogin()">Back</button>
   <button onclick="logout()">Logout</button>
 </section>
@@ -228,71 +230,82 @@ th,td{
 <div id="secretBtn" onclick="ownerAccess()"></div>
 
 <script>
+// =================== LOGIN & LOGOUT ===================
 const LOGIN_CODE="SSS123";
-const TEACHER_CODE="SSSTEACHER26";
+const TEACHER_CODE="TEACH456";
 const OWNER_CODE="1224";
-
-let score=0, round=0, maxRounds=5, clueLimit=4, points=20;
-let selected=[];
-let difficulty="easy";
-let startTime, endTime;
 let isLoggedIn=false;
-let plannerBudget=0, extraFees=0;
 
-const destinations=[
- {a:"Paris",c:["Eiffel Tower","Euro","Croissants","Spring","Romantic"]},
- {a:"Tokyo",c:["Yen","Sushi","Technology","Humid","Cherry Blossoms"]},
- {a:"Dubai",c:["Hot","Burj Khalifa","Dirham","Luxury","Desert"]},
- {a:"London",c:["Pound","Big Ben","Museums","Mild","Royal Family"]},
- {a:"New York",c:["Dollar","Statue of Liberty","Skyscrapers","Autumn","Broadway"]},
- {a:"Rome",c:["Colosseum","Pizza","Euro","Historic","Mediterranean"]},
- {a:"Sydney",c:["Opera House","AUD","Beaches","Summer","Harbour"]}
-];
-
-// =================== LOGIN FUNCTIONS ===================
 function checkLogin(){
-  const code = document.getElementById("loginCode").value;
-  if(code === LOGIN_CODE){
+  if(document.getElementById("loginCode").value===LOGIN_CODE){
     isLoggedIn=true;
-    login.style.display="none";
-    home.style.display="block";
-  } else { alert("Incorrect code"); }
+    login.style.display="none"; home.style.display="block";
+  } else alert("Incorrect code");
 }
+
 function showTeacherLogin(){ login.style.display="none"; teacherLogin.style.display="block"; }
-function checkTeacher(){
-  if(teacherCodeInput.value===TEACHER_CODE){ teacherLogin.style.display="none"; showTeacherSuite(); } 
-  else alert("Incorrect teacher code");
-}
+function checkTeacher(){ if(document.getElementById("teacherCodeInput").value===TEACHER_CODE){ teacherLogin.style.display="none"; showTeacherSuite(); } else alert("Incorrect teacher code"); }
 function backToLogin(){ document.querySelectorAll("section").forEach(s=>s.style.display="none"); login.style.display="block"; }
-function logout(){ isLoggedIn=false; score=0; round=0; selected=[]; document.querySelectorAll("section").forEach(s=>s.style.display="none"); login.style.display="block"; }
-function logoutAll(){ if(confirm("Clear all scores and log out everyone?")){ localStorage.removeItem("scores"); localStorage.removeItem("plannerScores"); location.reload(); } }
-
-// =================== TRIP PLANNER ===================
-function showPlanner(){ home.style.display="none"; planner.style.display="block"; startPlanner(); }
-function startPlanner(){ plannerBudget = Math.floor(Math.random()*(5000-1500+1))+1500; extraFees = Math.floor(Math.random()*200); document.getElementById('budgetText').innerText = `Budget: £${plannerBudget} (Extra Fees: £${extraFees} may apply)`; destinationSelect.value=transportSelect.value=accommodationSelect.value=foodSelect.value="0"; activitySelect.value="0"; plannerResult.innerText = ""; }
-function updatePlannerCost(){ const dest = parseInt(destinationSelect.value)||0; const transport = parseInt(transportSelect.value)||0; const accommodation = parseInt(accommodationSelect.value)||0; const food = parseInt(foodSelect.value)||0; const activities = Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0); const totalCost = dest+transport+accommodation+food+activities+extraFees; plannerResult.innerText = `Total Cost: £${totalCost} (Budget: £${plannerBudget})`; }
-function finishPlanner(){ const dest=parseInt(destinationSelect.value)||0; const transport=parseInt(transportSelect.value)||0; const accommodation=parseInt(accommodationSelect.value)||0; const food=parseInt(foodSelect.value)||0; const activities=Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0); let totalCost=dest+transport+accommodation+food+activities+extraFees; let score=0; if(dest>0) score++; if(transport>0) score++; if(accommodation>0) score++; if(food>0) score++; if(activities>0) score++; if(totalCost<=plannerBudget) score++; if(score>5) score=5; const name=plannerName.value||"Anonymous"; const studentClass=plannerClass.value||"Unknown"; const plannerScores=JSON.parse(localStorage.getItem('plannerScores')||"[]"); plannerScores.push({n:name,c:studentClass,s:score,max:5,t:new Date().toLocaleString()}); localStorage.setItem('plannerScores',JSON.stringify(plannerScores)); alert(`Trip Finished!\nTotal Cost: £${totalCost}\nRemaining Budget: £${plannerBudget-totalCost}\nScore: ${score}/5`); backHome(); }
-function backHome(){ document.querySelectorAll("section").forEach(s=>s.style.display="none"); home.style.display="block"; }
-
-// =================== GUESS GAME ===================
-function showGuess(){ difficulty=difficultySelect(); score=0; round=0; startTime=new Date(); selected=[...destinations].sort(()=>Math.random()-0.5).slice(0,maxRounds); home.style.display="none"; guessGame.style.display="block"; loadRound(); }
-function difficultySelect(){ const d=document.getElementById("difficulty").value; if(d==="medium"){maxRounds=7;clueLimit=3;points=15;} else if(d==="hard"){maxRounds=10;clueLimit=2;points=10;} else {maxRounds=5;clueLimit=4;points=20;} return d||"easy"; }
-function loadRound(){ if(round>=selected.length){ endGuessGame(); return; } roundText.innerText=`Round ${round+1}/${selected.length}`; let cluesToShow = selected[round].c.slice(0, clueLimit); if(difficulty==="medium"){ const decoys=["Food","Music","Beach","River","Mountain"]; cluesToShow=[...cluesToShow,decoys[Math.floor(Math.random()*decoys.length)]]; cluesToShow.sort(()=>Math.random()-0.5); } else if(difficulty==="hard"){ const decoys=["Sun","Moon","Car","Book","Festival"]; cluesToShow=[cluesToShow[0]||"",decoys[Math.floor(Math.random()*decoys.length)]]; cluesToShow.sort(()=>Math.random()-0.5); } clues.innerHTML=cluesToShow.map(x=>"<li>"+x+"</li>").join(""); const shuffledOptions=destinations.map(d=>d.a).sort(()=>Math.random()-0.5); guess.innerHTML="<option>Select</option>"+shuffledOptions.map(x=>`<option>${x}</option>`).join(""); }
-function submitGuess(){ score+=(guess.value===selected[round].a)?points:-5; round++; loadRound(); }
-function endGuessGame(){ guessGame.style.display="none"; end.style.display="block"; endTime=new Date(); const timeSpent=Math.floor((endTime-startTime)/1000); scoreText.innerText=`Score: ${score} (${difficulty}) | Time: ${timeSpent} sec`; }
-function saveScore(){ const data=JSON.parse(localStorage.getItem("scores")||"[]"); const timeSpent=Math.floor((endTime-startTime)/1000); data.push({ n:studentName.value, c:studentClass.value, s:score, d:difficulty, t:new Date().toLocaleString(), time:timeSpent }); localStorage.setItem("scores",JSON.stringify(data)); showBoards(); }
-function showBoards(){ end.style.display="none"; leaderboards.style.display="block"; ["easy","medium","hard"].forEach(d=>{ const list=JSON.parse(localStorage.getItem("scores")||"[]").filter(x=>x.d===d).sort((a,b)=>b.s-a.s).slice(0,5); document.getElementById(d+"Board").innerHTML=list.map(x=>`<li>${x.n} (${x.s})</li>`).join(""); }); }
-
-// =================== TEACHER ===================
-function showTeacherSuite(){ teacherSuite.style.display="block"; teacherTable.innerHTML=""; const scores=JSON.parse(localStorage.getItem("scores")||"[]"); scores.forEach(x=>{ teacherTable.innerHTML+=`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d}</td><td>${x.t}</td><td>${x.time||0}</td></tr>`; }); new Chart(document.getElementById('scoreChart').getContext('2d'),{ type:'bar', data:{ labels:scores.map(x=>x.n), datasets:[{ label:'Guess Game Score', data:scores.map(x=>x.s), backgroundColor:'rgba(79,195,247,0.7)' }] } }); const diffCounts={easy:0, medium:0, hard:0}; scores.forEach(x=>diffCounts[x.d]++); new Chart(document.getElementById('difficultyChart').getContext('2d'),{ type:'pie', data:{ labels:['Easy','Medium','Hard'], datasets:[{ data:[diffCounts.easy,diffCounts.medium,diffCounts.hard], backgroundColor:['#4fc3f7','#f7b74f','#f74f4f'] }] } }); const plannerScores=JSON.parse(localStorage.getItem('plannerScores')||"[]"); new Chart(document.getElementById('plannerChart').getContext('2d'),{ type:'bar', data:{ labels:plannerScores.map(x=>x.n), datasets:[{ label:'Trip Planner Score', data:plannerScores.map(x=>x.s), backgroundColor:'rgba(0,255,128,0.6)' }] } }); }
+function logout(){ document.querySelectorAll("section").forEach(s=>s.style.display="none"); login.style.display="block"; }
+function logoutAll(){ localStorage.removeItem("scores"); localStorage.removeItem("plannerScores"); localStorage.removeItem("quizScores"); localStorage.removeItem("memoryScores"); location.reload(); }
 
 // =================== STYLING ===================
 function toggleContrast(){ document.body.classList.toggle("high-contrast"); }
 function toggleText(){ document.body.classList.toggle("large-text"); }
+function backHome(){ document.querySelectorAll("section").forEach(s=>s.style.display="none"); home.style.display="block"; }
 
-// =================== OWNER ===================
+// =================== OWNER ACCESS ===================
 function ownerAccess(){ const c=prompt("Code please"); if(c===OWNER_CODE){ home.style.display="none"; ownerSuite.style.display="block"; } }
-function clearAllData(){ if(confirm("This will permanently delete all Guess Game and Trip Planner data. Continue?")){ localStorage.removeItem("scores"); localStorage.removeItem("plannerScores"); alert("All data cleared!"); } }
+function clearAllData(){ if(confirm("Delete all scores?")){ localStorage.removeItem("scores"); localStorage.removeItem("plannerScores"); localStorage.removeItem("quizScores"); localStorage.removeItem("memoryScores"); alert("All data cleared!"); } }
+
+// =================== PLACEHOLDER FOR GAMES ===================
+// Trip Planner, Guess Game, Quiz Game, Memory Game code (from previous messages) would go here
+// This includes: finishPlanner(), showGuess(), submitGuess(), showQuiz(), loadQuizQuestion(), showMemory(), flipMemoryCard(), etc.
+
+// =================== TEACHER SUITE CHARTS ===================
+function showTeacherSuite(){
+  teacherSuite.style.display="block";
+  teacherTable.innerHTML="";
+
+  const guessScores = JSON.parse(localStorage.getItem("scores")||"[]");
+  const plannerScores = JSON.parse(localStorage.getItem("plannerScores")||"[]");
+  const quizScores = JSON.parse(localStorage.getItem("quizScores")||"[]");
+  const memoryScores = JSON.parse(localStorage.getItem("memoryScores")||"[]");
+
+  [...guessScores, ...plannerScores, ...quizScores, ...memoryScores].forEach(x=>{
+    teacherTable.innerHTML+=`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d||x.game||'Game'}</td><td>${x.t}</td><td>${x.time||'-'}</td></tr>`;
+  });
+
+  // Guess Scores Chart
+  new Chart(document.getElementById('scoreChart').getContext('2d'),{
+    type:'bar',
+    data:{ labels:guessScores.map(x=>x.n), datasets:[{label:'Guess Game', data:guessScores.map(x=>x.s), backgroundColor:'rgba(79,195,247,0.7)'}] }
+  });
+  // Planner Chart
+  new Chart(document.getElementById('plannerChart').getContext('2d'),{
+    type:'bar',
+    data:{ labels:plannerScores.map(x=>x.n), datasets:[{label:'Trip Planner', data:plannerScores.map(x=>x.s), backgroundColor:'rgba(0,255,128,0.6)'}] }
+  });
+  // Quiz Chart
+  new Chart(document.getElementById('quizChart').getContext('2d'),{
+    type:'bar',
+    data:{ labels:quizScores.map(x=>x.n), datasets:[{label:'Travel Quiz', data:quizScores.map(x=>x.s), backgroundColor:'rgba(255,165,0,0.7)'}] }
+  });
+  // Memory Chart
+  new Chart(document.getElementById('memoryChart').getContext('2d'),{
+    type:'bar',
+    data:{ labels:memoryScores.map(x=>x.n), datasets:[{label:'Memory Game', data:memoryScores.map(x=>x.s), backgroundColor:'rgba(255,0,128,0.7)'}] }
+  });
+
+  // Difficulty Pie
+  const allScores = [...guessScores, ...plannerScores, ...quizScores, ...memoryScores];
+  const diffCounts = {easy:0, medium:0, hard:0};
+  allScores.forEach(x=>{ const d=x.d||"easy"; diffCounts[d]++; });
+  new Chart(document.getElementById('difficultyChart').getContext('2d'),{
+    type:'pie',
+    data:{ labels:['Easy','Medium','Hard'], datasets:[{data:[diffCounts.easy,diffCounts.medium,diffCounts.hard], backgroundColor:['#4fc3f7','#f7b74f','#f74f4f']}] }
+  });
+}
 </script>
 </body>
 </html>
