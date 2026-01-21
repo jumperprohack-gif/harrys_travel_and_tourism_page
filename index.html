@@ -199,7 +199,7 @@ th,td{
   <button onclick="logout()">Logout</button>
 </section>
 
-<!-- TEACHER -->
+<!-- TEACHER SUITE -->
 <section id="teacherSuite" style="display:none">
   <h2>👩‍🏫 Teacher Score Table</h2>
   <table>
@@ -216,10 +216,11 @@ th,td{
   <button onclick="logout()">Logout</button>
 </section>
 
-<!-- OWNER -->
+<!-- OWNER SUITE -->
 <section id="ownerSuite" style="display:none">
   <h2>🔒 Owner’s Suite</h2>
   <button onclick="showTeacherSuite()">View Teacher Table</button>
+  <button onclick="clearAllData()">Clear All Data</button>
   <button onclick="logoutAll()">Logout All</button>
   <button onclick="location.reload()">Exit</button>
 </section>
@@ -228,10 +229,9 @@ th,td{
 
 <script>
 const LOGIN_CODE="SSS123";
-const TEACHER_CODE="TEACH456";
+const TEACHER_CODE="SSSTEACHER26";
 const OWNER_CODE="1224";
 
-// =================== GLOBAL VARIABLES ===================
 let score=0, round=0, maxRounds=5, clueLimit=4, points=20;
 let selected=[];
 let difficulty="easy";
@@ -258,218 +258,41 @@ function checkLogin(){
     home.style.display="block";
   } else { alert("Incorrect code"); }
 }
-
-function showTeacherLogin(){ 
-  login.style.display="none"; 
-  teacherLogin.style.display="block"; 
-}
-
+function showTeacherLogin(){ login.style.display="none"; teacherLogin.style.display="block"; }
 function checkTeacher(){
-  if(teacherCodeInput.value===TEACHER_CODE){
-    teacherLogin.style.display="none";
-    showTeacherSuite();
-  } else alert("Incorrect teacher code");
+  if(teacherCodeInput.value===TEACHER_CODE){ teacherLogin.style.display="none"; showTeacherSuite(); } 
+  else alert("Incorrect teacher code");
 }
-
-function backToLogin(){
-  document.querySelectorAll("section").forEach(s=>s.style.display="none");
-  login.style.display="block";
-}
-
-function logout(){
-  isLoggedIn=false;
-  score=0; round=0; selected=[];
-  document.querySelectorAll("section").forEach(s=>s.style.display="none");
-  login.style.display="block";
-}
-
-function logoutAll(){
-  if(confirm("Clear all scores and log out everyone?")){
-    localStorage.removeItem("scores");
-    localStorage.removeItem("plannerScores");
-    location.reload();
-  }
-}
+function backToLogin(){ document.querySelectorAll("section").forEach(s=>s.style.display="none"); login.style.display="block"; }
+function logout(){ isLoggedIn=false; score=0; round=0; selected=[]; document.querySelectorAll("section").forEach(s=>s.style.display="none"); login.style.display="block"; }
+function logoutAll(){ if(confirm("Clear all scores and log out everyone?")){ localStorage.removeItem("scores"); localStorage.removeItem("plannerScores"); location.reload(); } }
 
 // =================== TRIP PLANNER ===================
-function showPlanner(){
-  home.style.display="none";
-  planner.style.display="block";
-  startPlanner();
-}
-
-function startPlanner(){
-  plannerBudget = Math.floor(Math.random()*(5000-1500+1))+1500;
-  extraFees = Math.floor(Math.random()*200);
-  document.getElementById('budgetText').innerText = `Budget: £${plannerBudget} (Extra Fees: £${extraFees} may apply)`;
-  destinationSelect.value=transportSelect.value=accommodationSelect.value=foodSelect.value="0";
-  activitySelect.value="0";
-  plannerResult.innerText = "";
-}
-
-function updatePlannerCost(){
-  const dest = parseInt(destinationSelect.value)||0;
-  const transport = parseInt(transportSelect.value)||0;
-  const accommodation = parseInt(accommodationSelect.value)||0;
-  const food = parseInt(foodSelect.value)||0;
-  const activities = Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0);
-  const totalCost = dest + transport + accommodation + food + activities + extraFees;
-  plannerResult.innerText = `Total Cost: £${totalCost} (Budget: £${plannerBudget})`;
-}
-
-function finishPlanner(){
-  const dest = parseInt(destinationSelect.value)||0;
-  const transport = parseInt(transportSelect.value)||0;
-  const accommodation = parseInt(accommodationSelect.value)||0;
-  const food = parseInt(foodSelect.value)||0;
-  const activities = Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0);
-  let totalCost = dest + transport + accommodation + food + activities + extraFees;
-
-  let score = 0;
-  if(dest>0) score++;
-  if(transport>0) score++;
-  if(accommodation>0) score++;
-  if(food>0) score++;
-  if(activities>0) score++;
-
-  if(totalCost <= plannerBudget) score++; // Bonus
-
-  if(score>5) score=5;
-
-  const name = plannerName.value||"Anonymous";
-  const studentClass = plannerClass.value||"Unknown";
-
-  const plannerScores = JSON.parse(localStorage.getItem('plannerScores')||"[]");
-  plannerScores.push({n:name,c:studentClass,s:score,max:5,t:new Date().toLocaleString()});
-  localStorage.setItem('plannerScores',JSON.stringify(plannerScores));
-
-  alert(`Trip Finished!\nTotal Cost: £${totalCost}\nRemaining Budget: £${plannerBudget-totalCost}\nScore: ${score}/5`);
-  backHome();
-}
+function showPlanner(){ home.style.display="none"; planner.style.display="block"; startPlanner(); }
+function startPlanner(){ plannerBudget = Math.floor(Math.random()*(5000-1500+1))+1500; extraFees = Math.floor(Math.random()*200); document.getElementById('budgetText').innerText = `Budget: £${plannerBudget} (Extra Fees: £${extraFees} may apply)`; destinationSelect.value=transportSelect.value=accommodationSelect.value=foodSelect.value="0"; activitySelect.value="0"; plannerResult.innerText = ""; }
+function updatePlannerCost(){ const dest = parseInt(destinationSelect.value)||0; const transport = parseInt(transportSelect.value)||0; const accommodation = parseInt(accommodationSelect.value)||0; const food = parseInt(foodSelect.value)||0; const activities = Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0); const totalCost = dest+transport+accommodation+food+activities+extraFees; plannerResult.innerText = `Total Cost: £${totalCost} (Budget: £${plannerBudget})`; }
+function finishPlanner(){ const dest=parseInt(destinationSelect.value)||0; const transport=parseInt(transportSelect.value)||0; const accommodation=parseInt(accommodationSelect.value)||0; const food=parseInt(foodSelect.value)||0; const activities=Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0); let totalCost=dest+transport+accommodation+food+activities+extraFees; let score=0; if(dest>0) score++; if(transport>0) score++; if(accommodation>0) score++; if(food>0) score++; if(activities>0) score++; if(totalCost<=plannerBudget) score++; if(score>5) score=5; const name=plannerName.value||"Anonymous"; const studentClass=plannerClass.value||"Unknown"; const plannerScores=JSON.parse(localStorage.getItem('plannerScores')||"[]"); plannerScores.push({n:name,c:studentClass,s:score,max:5,t:new Date().toLocaleString()}); localStorage.setItem('plannerScores',JSON.stringify(plannerScores)); alert(`Trip Finished!\nTotal Cost: £${totalCost}\nRemaining Budget: £${plannerBudget-totalCost}\nScore: ${score}/5`); backHome(); }
+function backHome(){ document.querySelectorAll("section").forEach(s=>s.style.display="none"); home.style.display="block"; }
 
 // =================== GUESS GAME ===================
-function showGuess(){
-  difficulty=difficultySelect();
-  score=0; round=0; startTime=new Date();
-  selected=[...destinations].sort(()=>Math.random()-0.5).slice(0,maxRounds);
-  home.style.display="none"; guessGame.style.display="block";
-  loadRound();
-}
-
-function difficultySelect(){
-  const d=document.getElementById("difficulty").value;
-  if(d==="medium"){maxRounds=7;clueLimit=3;points=15;}
-  else if(d==="hard"){maxRounds=10;clueLimit=2;points=10;}
-  else {maxRounds=5;clueLimit=4;points=20;}
-  return d||"easy";
-}
-
-function loadRound(){
-  if(round>=selected.length){ endGuessGame(); return; }
-  roundText.innerText=`Round ${round+1}/${selected.length}`;
-  let cluesToShow = selected[round].c.slice(0, clueLimit);
-
-  if(difficulty === "medium"){
-    const decoys = ["Food","Music","Beach","River","Mountain"];
-    cluesToShow = [...cluesToShow, decoys[Math.floor(Math.random()*decoys.length)]];
-    cluesToShow.sort(() => Math.random() - 0.5);
-  } else if(difficulty === "hard"){
-    const decoys = ["Sun","Moon","Car","Book","Festival"];
-    cluesToShow = [cluesToShow[0]||"", decoys[Math.floor(Math.random()*decoys.length)]];
-    cluesToShow.sort(() => Math.random() - 0.5);
-  }
-
-  clues.innerHTML = cluesToShow.map(x=>"<li>"+x+"</li>").join("");
-  const shuffledOptions = destinations.map(d=>d.a).sort(() => Math.random() - 0.5);
-  guess.innerHTML="<option>Select</option>"+shuffledOptions.map(x=>`<option>${x}</option>`).join("");
-}
-
-function submitGuess(){
-  score += (guess.value===selected[round].a)? points : -5;
-  round++; loadRound();
-}
-
-function endGuessGame(){
-  guessGame.style.display="none";
-  end.style.display="block";
-  endTime=new Date();
-  const timeSpent=Math.floor((endTime-startTime)/1000);
-  scoreText.innerText=`Score: ${score} (${difficulty}) | Time: ${timeSpent} sec`;
-}
-
-function saveScore(){
-  const data=JSON.parse(localStorage.getItem("scores")||"[]");
-  const timeSpent=Math.floor((endTime-startTime)/1000);
-  data.push({ n:studentName.value, c:studentClass.value, s:score, d:difficulty, t:new Date().toLocaleString(), time:timeSpent });
-  localStorage.setItem("scores",JSON.stringify(data));
-  showBoards();
-}
-
-function showBoards(){
-  end.style.display="none"; leaderboards.style.display="block";
-  ["easy","medium","hard"].forEach(d=>{
-    const list=JSON.parse(localStorage.getItem("scores")||"[]").filter(x=>x.d===d)
-      .sort((a,b)=>b.s-a.s).slice(0,5);
-    document.getElementById(d+"Board").innerHTML=list.map(x=>`<li>${x.n} (${x.s})</li>`).join("");
-  });
-}
+function showGuess(){ difficulty=difficultySelect(); score=0; round=0; startTime=new Date(); selected=[...destinations].sort(()=>Math.random()-0.5).slice(0,maxRounds); home.style.display="none"; guessGame.style.display="block"; loadRound(); }
+function difficultySelect(){ const d=document.getElementById("difficulty").value; if(d==="medium"){maxRounds=7;clueLimit=3;points=15;} else if(d==="hard"){maxRounds=10;clueLimit=2;points=10;} else {maxRounds=5;clueLimit=4;points=20;} return d||"easy"; }
+function loadRound(){ if(round>=selected.length){ endGuessGame(); return; } roundText.innerText=`Round ${round+1}/${selected.length}`; let cluesToShow = selected[round].c.slice(0, clueLimit); if(difficulty==="medium"){ const decoys=["Food","Music","Beach","River","Mountain"]; cluesToShow=[...cluesToShow,decoys[Math.floor(Math.random()*decoys.length)]]; cluesToShow.sort(()=>Math.random()-0.5); } else if(difficulty==="hard"){ const decoys=["Sun","Moon","Car","Book","Festival"]; cluesToShow=[cluesToShow[0]||"",decoys[Math.floor(Math.random()*decoys.length)]]; cluesToShow.sort(()=>Math.random()-0.5); } clues.innerHTML=cluesToShow.map(x=>"<li>"+x+"</li>").join(""); const shuffledOptions=destinations.map(d=>d.a).sort(()=>Math.random()-0.5); guess.innerHTML="<option>Select</option>"+shuffledOptions.map(x=>`<option>${x}</option>`).join(""); }
+function submitGuess(){ score+=(guess.value===selected[round].a)?points:-5; round++; loadRound(); }
+function endGuessGame(){ guessGame.style.display="none"; end.style.display="block"; endTime=new Date(); const timeSpent=Math.floor((endTime-startTime)/1000); scoreText.innerText=`Score: ${score} (${difficulty}) | Time: ${timeSpent} sec`; }
+function saveScore(){ const data=JSON.parse(localStorage.getItem("scores")||"[]"); const timeSpent=Math.floor((endTime-startTime)/1000); data.push({ n:studentName.value, c:studentClass.value, s:score, d:difficulty, t:new Date().toLocaleString(), time:timeSpent }); localStorage.setItem("scores",JSON.stringify(data)); showBoards(); }
+function showBoards(){ end.style.display="none"; leaderboards.style.display="block"; ["easy","medium","hard"].forEach(d=>{ const list=JSON.parse(localStorage.getItem("scores")||"[]").filter(x=>x.d===d).sort((a,b)=>b.s-a.s).slice(0,5); document.getElementById(d+"Board").innerHTML=list.map(x=>`<li>${x.n} (${x.s})</li>`).join(""); }); }
 
 // =================== TEACHER ===================
-function showTeacherSuite(){
-  teacherSuite.style.display="block";
-  teacherTable.innerHTML="";
-  const scores=JSON.parse(localStorage.getItem("scores")||"[]");
-  scores.forEach(x=>{
-    teacherTable.innerHTML+=`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d}</td><td>${x.t}</td><td>${x.time||0}</td></tr>`;
-  });
-
-  // Guess Game Score Chart
-  new Chart(document.getElementById('scoreChart').getContext('2d'),{
-    type:'bar',
-    data:{
-      labels:scores.map(x=>x.n),
-      datasets:[{ label:'Guess Game Score', data:scores.map(x=>x.s), backgroundColor:'rgba(79,195,247,0.7)' }]
-    }
-  });
-
-  // Difficulty Pie Chart
-  const diffCounts={easy:0, medium:0, hard:0};
-  scores.forEach(x=>diffCounts[x.d]++);
-  new Chart(document.getElementById('difficultyChart').getContext('2d'),{
-    type:'pie',
-    data:{
-      labels:['Easy','Medium','Hard'],
-      datasets:[{ data:[diffCounts.easy,diffCounts.medium,diffCounts.hard], backgroundColor:['#4fc3f7','#f7b74f','#f74f4f'] }]
-    }
-  });
-
-  // Trip Planner Chart
-  const plannerScores=JSON.parse(localStorage.getItem('plannerScores')||"[]");
-  new Chart(document.getElementById('plannerChart').getContext('2d'),{
-    type:'bar',
-    data:{
-      labels:plannerScores.map(x=>x.n),
-      datasets:[{ label:'Trip Planner Score', data:plannerScores.map(x=>x.s), backgroundColor:'rgba(0,255,128,0.6)' }]
-    }
-  });
-}
+function showTeacherSuite(){ teacherSuite.style.display="block"; teacherTable.innerHTML=""; const scores=JSON.parse(localStorage.getItem("scores")||"[]"); scores.forEach(x=>{ teacherTable.innerHTML+=`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d}</td><td>${x.t}</td><td>${x.time||0}</td></tr>`; }); new Chart(document.getElementById('scoreChart').getContext('2d'),{ type:'bar', data:{ labels:scores.map(x=>x.n), datasets:[{ label:'Guess Game Score', data:scores.map(x=>x.s), backgroundColor:'rgba(79,195,247,0.7)' }] } }); const diffCounts={easy:0, medium:0, hard:0}; scores.forEach(x=>diffCounts[x.d]++); new Chart(document.getElementById('difficultyChart').getContext('2d'),{ type:'pie', data:{ labels:['Easy','Medium','Hard'], datasets:[{ data:[diffCounts.easy,diffCounts.medium,diffCounts.hard], backgroundColor:['#4fc3f7','#f7b74f','#f74f4f'] }] } }); const plannerScores=JSON.parse(localStorage.getItem('plannerScores')||"[]"); new Chart(document.getElementById('plannerChart').getContext('2d'),{ type:'bar', data:{ labels:plannerScores.map(x=>x.n), datasets:[{ label:'Trip Planner Score', data:plannerScores.map(x=>x.s), backgroundColor:'rgba(0,255,128,0.6)' }] } }); }
 
 // =================== STYLING ===================
 function toggleContrast(){ document.body.classList.toggle("high-contrast"); }
 function toggleText(){ document.body.classList.toggle("large-text"); }
-function backHome(){ 
-  document.querySelectorAll("section").forEach(s=>s.style.display="none");
-  home.style.display="block"; 
-}
 
 // =================== OWNER ===================
-function ownerAccess(){
-  const c=prompt("Code please");
-  if(c===OWNER_CODE){
-    home.style.display="none";
-    ownerSuite.style.display="block";
-  }
-}
+function ownerAccess(){ const c=prompt("Code please"); if(c===OWNER_CODE){ home.style.display="none"; ownerSuite.style.display="block"; } }
+function clearAllData(){ if(confirm("This will permanently delete all Guess Game and Trip Planner data. Continue?")){ localStorage.removeItem("scores"); localStorage.removeItem("plannerScores"); alert("All data cleared!"); } }
 </script>
 </body>
 </html>
