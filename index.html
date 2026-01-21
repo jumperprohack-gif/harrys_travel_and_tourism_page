@@ -2,270 +2,294 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>BTEC Travel & Tourism Game</title>
+<title>Travel And Tourism</title>
 
 <style>
-:root {
-  --bg-dark: #000;
-  --bg-panel: rgba(0,0,0,0.9);
+:root{
+  --bg: rgba(0,0,0,0.85);
   --text: #ffffff;
   --accent: #4fc3f7;
-  --font-size: 16px;
+  --font: 16px;
 }
 
-body {
+body{
   margin:0;
-  font-family: Arial, sans-serif;
-  color: var(--text);
-  font-size: var(--font-size);
+  font-family:Arial, sans-serif;
+  color:var(--text);
+  font-size:var(--font);
+  background:url("travel_the_world.jpg") no-repeat center center fixed;
+  background-size:cover;
 }
 
-.high-contrast {
-  --bg-panel: #000;
-  --text: #ffff00;
-  --accent: #00ffff;
+.high-contrast{
+  --bg:#000;
+  --text:#ffff00;
+  --accent:#00ffff;
 }
 
-.large-text {
-  --font-size: 20px;
+.large-text{
+  --font:20px;
 }
 
-.home {
-  height:100vh;
-  background:url("travel_the_world.jpg") no-repeat center/cover;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  text-shadow:2px 2px 6px black;
+#siteTitle{
+  position:fixed;
+  top:15px;
+  left:20px;
+  font-size:46px;
+  font-weight:bold;
+  text-shadow:3px 3px 8px black;
+  z-index:1000;
 }
 
-button, select, input {
+section{
+  max-width:1000px;
+  margin:120px auto;
+  padding:20px;
+  background:var(--bg);
+  border-radius:12px;
+}
+
+button,select,input{
   padding:10px;
   margin:6px;
   border-radius:6px;
   border:none;
 }
 
-button {
-  background: var(--accent);
+button{
+  background:var(--accent);
   cursor:pointer;
 }
 
-section {
-  max-width:1000px;
-  margin:40px auto;
-  background: var(--bg-panel);
-  padding:20px;
-  border-radius:10px;
-}
-
-h2 { color: var(--accent); }
-
-table {
+table{
   width:100%;
   border-collapse:collapse;
 }
-
-th, td {
+th,td{
   border:1px solid #555;
   padding:8px;
   text-align:center;
+}
+
+#secretBtn{
+  position:fixed;
+  bottom:0;
+  right:0;
+  width:50px;
+  height:50px;
+  opacity:0;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<div class="home" id="home">
-<h1>✈️ Travel The World</h1>
-<p>BTEC Travel & Tourism Interactive Game</p>
+<div id="siteTitle">Travel And Tourism</div>
 
-<select id="difficulty">
-<option value="">Select Difficulty</option>
-<option value="easy">Easy</option>
-<option value="medium">Medium</option>
-<option value="hard">Hard</option>
-</select>
-
-<button onclick="startGame()">Start Game</button>
-<button onclick="toggleContrast()">High Contrast</button>
-<button onclick="toggleText()">Large Text</button>
-<button onclick="showTeacherLogin()">Teacher Login</button>
-</div>
-
-<section id="planner" style="display:none;">
-<h2>🌍 Plan the Perfect Trip</h2>
-<p id="budgetDisplay">Budget: £2000</p>
-
-<select onchange="updateCost(this.value)">
-<option value="0">Destination</option>
-<option value="500">Paris</option>
-<option value="700">New York</option>
-<option value="400">Barcelona</option>
-<option value="600">Dubai</option>
-</select>
-
-<select onchange="updateCost(this.value)">
-<option value="0">Transport</option>
-<option value="300">Plane</option>
-<option value="150">Train</option>
-<option value="100">Coach</option>
-</select>
-
-<select onchange="updateCost(this.value)">
-<option value="0">Accommodation</option>
-<option value="600">Hotel</option>
-<option value="400">Hostel</option>
-<option value="500">Apartment</option>
-</select>
-
-<button onclick="startGuessGame()">Next</button>
+<!-- LOGIN -->
+<section id="login">
+  <h2>🔐 Access Required</h2>
+  <p>Please enter the access code</p>
+  <input type="password" id="loginCode" placeholder="Enter code">
+  <button onclick="checkLogin()">Enter</button>
 </section>
 
-<section id="guessGame" style="display:none;">
-<h2>🧭 Guess the Destination</h2>
-<p id="roundText"></p>
-<ul id="clues"></ul>
-<select id="guess"></select>
-<button onclick="submitGuess()">Submit</button>
+<!-- HOME -->
+<section id="home" style="display:none">
+  <h2>Welcome</h2>
+
+  <select id="difficulty">
+    <option value="">Select Difficulty</option>
+    <option value="easy">Easy</option>
+    <option value="medium">Medium</option>
+    <option value="hard">Hard</option>
+  </select><br>
+
+  <button onclick="showPlanner()">🧳 Trip Planner</button>
+  <button onclick="showGuess()">🧭 Guess the Destination</button><br><br>
+
+  <button onclick="toggleContrast()">High Contrast</button>
+  <button onclick="toggleText()">Large Text</button>
 </section>
 
-<section id="endScreen" style="display:none;">
-<h2>🏆 Final Score</h2>
-<p id="finalScore"></p>
-<input id="studentName" placeholder="Your Name">
-<input id="studentClass" placeholder="Your Class">
-<button onclick="submitScore()">Submit</button>
+<!-- PLANNER -->
+<section id="planner" style="display:none">
+  <h2>🧳 Trip Planner</h2>
+  <p id="budgetText">Budget: £2000</p>
+
+  <select onchange="updateBudget(this.value)">
+    <option value="0">Destination</option>
+    <option value="500">Paris</option>
+    <option value="700">New York</option>
+    <option value="400">Barcelona</option>
+    <option value="600">Dubai</option>
+  </select>
+
+  <select onchange="updateBudget(this.value)">
+    <option value="0">Transport</option>
+    <option value="300">Plane</option>
+    <option value="150">Train</option>
+    <option value="100">Coach</option>
+  </select>
+
+  <select onchange="updateBudget(this.value)">
+    <option value="0">Accommodation</option>
+    <option value="600">Hotel</option>
+    <option value="400">Hostel</option>
+    <option value="500">Apartment</option>
+  </select>
+
+  <p id="plannerResult"></p>
+  <button onclick="finishPlanner()">Finish</button>
 </section>
 
-<section id="leaderboards" style="display:none;">
-<h2>📊 Leaderboards</h2>
-<h3>Easy</h3><ul id="easyBoard"></ul>
-<h3>Medium</h3><ul id="mediumBoard"></ul>
-<h3>Hard</h3><ul id="hardBoard"></ul>
-<button onclick="location.reload()">Home</button>
+<!-- GUESS GAME -->
+<section id="guessGame" style="display:none">
+  <h2>🧭 Guess the Destination</h2>
+  <p id="roundText"></p>
+  <ul id="clues"></ul>
+  <select id="guess"></select><br>
+  <button onclick="submitGuess()">Submit</button>
 </section>
 
-<section id="teacherLogin" style="display:none;">
-<h2>Teacher Login</h2>
-<input type="password" id="teacherPass">
-<button onclick="teacherLogin()">Login</button>
+<!-- END -->
+<section id="end" style="display:none">
+  <h2>Final Score</h2>
+  <p id="scoreText"></p>
+
+  <input id="studentName" placeholder="Name">
+  <input id="studentClass" placeholder="Class">
+  <button onclick="saveScore()">Save Score</button>
 </section>
 
-<section id="teacherAdmin" style="display:none;">
-<h2>Teacher Admin</h2>
-<table>
-<thead><tr><th>Name</th><th>Class</th><th>Score</th><th>Difficulty</th><th>Date</th></tr></thead>
-<tbody id="resultsTable"></tbody>
-</table>
-<button onclick="clearResults()">Clear Results</button>
-<button onclick="location.reload()">Home</button>
+<!-- LEADERBOARDS -->
+<section id="leaderboards" style="display:none">
+  <h2>🏆 Leaderboards</h2>
+  <h3>Easy</h3><ul id="easyBoard"></ul>
+  <h3>Medium</h3><ul id="mediumBoard"></ul>
+  <h3>Hard</h3><ul id="hardBoard"></ul>
+  <button onclick="location.reload()">Home</button>
 </section>
+
+<!-- TEACHER -->
+<section id="teacher" style="display:none">
+  <h2>👩‍🏫 Teacher Score Table</h2>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Class</th><th>Score</th><th>Difficulty</th><th>Date</th></tr>
+    </thead>
+    <tbody id="teacherTable"></tbody>
+  </table>
+  <button onclick="clearScores()">Clear Scores</button>
+</section>
+
+<!-- OWNER -->
+<section id="ownerSuite" style="display:none">
+  <h2>🔒 Owner’s Suite</h2>
+  <button onclick="showTeacher()">View Teacher Table</button>
+  <button onclick="location.reload()">Exit</button>
+</section>
+
+<div id="secretBtn" onclick="ownerAccess()"></div>
 
 <script>
-let budget=2000, score=0, roundIndex=0;
-let difficulty="", roundLimit=5, clueLimit=5, points=20;
-const TEACHER_PASSWORD="SSSTeacher";
+const LOGIN_CODE="SSS123";
+const OWNER_CODE="1224";
+
+let score=0, round=0, maxRounds=5, clueLimit=4, points=20;
+let selected=[];
+let difficulty="easy";
 
 const destinations=[
-{a:"Barcelona",c:["Warm Mediterranean","Sagrada Familia","Euro","Tapas","Summer"],o:["Barcelona","Paris","Rome","Athens","Madrid","Lisbon"]},
-{a:"Paris",c:["Mild","Eiffel Tower","Euro","Croissants","Spring"],o:["Paris","Berlin","Vienna","Prague","Rome","Madrid"]},
-{a:"Dubai",c:["Hot desert","Burj Khalifa","Dirham","Shawarma","Winter"],o:["Dubai","Doha","Riyadh","Abu Dhabi","Muscat","Kuwait"]},
-{a:"London",c:["Mild","Big Ben","Pound","Fish & Chips","Summer"],o:["London","Dublin","Edinburgh","Cardiff","Belfast","Manchester"]},
-{a:"Tokyo",c:["Humid","Tokyo Tower","Yen","Sushi","Spring"],o:["Tokyo","Osaka","Seoul","Beijing","Kyoto","Shanghai"]},
-{a:"Rome",c:["Mediterranean","Colosseum","Euro","Pizza","Spring"],o:["Rome","Milan","Athens","Naples","Venice","Florence"]},
-{a:"New York",c:["Seasonal","Statue of Liberty","Dollar","Burgers","Autumn"],o:["New York","Chicago","Toronto","Boston","LA","Miami"]},
-{a:"Sydney",c:["Coastal","Opera House","AUD","Seafood","Summer"],o:["Sydney","Melbourne","Perth","Brisbane","Adelaide","Auckland"]},
-{a:"Berlin",c:["Cold winters","Brandenburg Gate","Euro","Sausages","Spring"],o:["Berlin","Munich","Vienna","Hamburg","Prague","Zurich"]},
-{a:"Athens",c:["Hot summers","Acropolis","Euro","Gyros","Summer"],o:["Athens","Rome","Istanbul","Sofia","Nicosia","Dubrovnik"]}
+ {a:"Paris",c:["Eiffel Tower","Euro","Croissants","Spring","Romantic"]},
+ {a:"Tokyo",c:["Yen","Sushi","Technology","Humid","Cherry Blossoms"]},
+ {a:"Dubai",c:["Hot","Burj Khalifa","Dirham","Luxury","Desert"]},
+ {a:"London",c:["Pound","Big Ben","Museums","Mild","Royal Family"]},
+ {a:"New York",c:["Dollar","Statue of Liberty","Skyscrapers","Autumn","Broadway"]},
+ {a:"Rome",c:["Colosseum","Pizza","Euro","Historic","Mediterranean"]},
+ {a:"Sydney",c:["Opera House","AUD","Beaches","Summer","Harbour"]}
 ];
 
-let rounds=[];
+function checkLogin(){
+  if(loginCode.value===LOGIN_CODE){
+    login.style.display="none";
+    home.style.display="block";
+  } else alert("Incorrect code");
+}
 
-function startGame(){
-  difficulty=document.getElementById("difficulty").value;
-  if(!difficulty){alert("Select difficulty");return;}
-  if(difficulty==="easy"){roundLimit=5;clueLimit=5;points=20;}
-  if(difficulty==="medium"){roundLimit=7;clueLimit=4;points=15;}
-  if(difficulty==="hard"){roundLimit=10;clueLimit=3;points=10;}
-  rounds=[...destinations].sort(()=>Math.random()-0.5).slice(0,roundLimit);
+function showPlanner(){ home.style.display="none"; planner.style.display="block"; }
+
+function showGuess(){
+  difficulty=difficultySelect();
+  score=0; round=0;
+
+  selected=[...destinations].sort(()=>Math.random()-0.5).slice(0,maxRounds);
   home.style.display="none";
-  planner.style.display="block";
-}
-
-function updateCost(v){
-  budget-=parseInt(v);
-  budgetDisplay.innerText="Budget: £"+budget;
-}
-
-function startGuessGame(){
-  planner.style.display="none";
   guessGame.style.display="block";
   loadRound();
 }
 
+function difficultySelect(){
+  const d=document.getElementById("difficulty").value;
+  if(d==="medium"){maxRounds=7;clueLimit=3;points=15;}
+  else if(d==="hard"){maxRounds=10;clueLimit=2;points=10;}
+  else {maxRounds=5;clueLimit=4;points=20;}
+  return d||"easy";
+}
+
 function loadRound(){
-  if(roundIndex>=rounds.length){finishGame();return;}
-  roundText.innerText=`Round ${roundIndex+1}/${rounds.length}`;
-  clues.innerHTML=rounds[roundIndex].c.slice(0,clueLimit).map(x=>"<li>"+x+"</li>").join("");
-  guess.innerHTML="<option>Select</option>"+rounds[roundIndex].o.slice(0,clueLimit+1).map(x=>`<option>${x}</option>`).join("");
+  if(round>=selected.length){ endGame(); return; }
+  roundText.innerText=`Round ${round+1}/${selected.length}`;
+  clues.innerHTML=selected[round].c.slice(0,clueLimit).map(x=>"<li>"+x+"</li>").join("");
+  guess.innerHTML="<option>Select</option>"+destinations.map(d=>`<option>${d.a}</option>`).join("");
 }
 
 function submitGuess(){
-  if(guess.value===rounds[roundIndex].a) score+=points;
-  else score-=5;
-  roundIndex++; loadRound();
+  score += (guess.value===selected[round].a) ? points : -5;
+  round++; loadRound();
 }
 
-function finishGame(){
+function endGame(){
   guessGame.style.display="none";
-  endScreen.style.display="block";
-  finalScore.innerText=`Score: ${score} (${difficulty})`;
+  end.style.display="block";
+  scoreText.innerText=`Score: ${score} (${difficulty})`;
 }
 
-function submitScore(){
-  const n=studentName.value, c=studentClass.value;
-  if(!n||!c) return;
-  const data=JSON.parse(localStorage.getItem("results")||"[]");
-  data.push({n,c,score,difficulty,date:new Date().toLocaleString()});
-  localStorage.setItem("results",JSON.stringify(data));
-  showLeaderboards();
+function saveScore(){
+  const data=JSON.parse(localStorage.getItem("scores")||"[]");
+  data.push({n:studentName.value,c:studentClass.value,s:score,d:difficulty,t:new Date().toLocaleString()});
+  localStorage.setItem("scores",JSON.stringify(data));
+  showBoards();
 }
 
-function showLeaderboards(){
-  endScreen.style.display="none";
+function showBoards(){
+  end.style.display="none";
   leaderboards.style.display="block";
-  const data=JSON.parse(localStorage.getItem("results")||"[]");
   ["easy","medium","hard"].forEach(d=>{
-    const list=data.filter(x=>x.difficulty===d).sort((a,b)=>b.score-a.score).slice(0,5);
-    document.getElementById(d+"Board").innerHTML=list.map(x=>`<li>${x.n} (${x.score})</li>`).join("");
+    const list=JSON.parse(localStorage.getItem("scores")||"[]")
+      .filter(x=>x.d===d).sort((a,b)=>b.s-a.s).slice(0,5);
+    document.getElementById(d+"Board").innerHTML=list.map(x=>`<li>${x.n} (${x.s})</li>`).join("");
   });
 }
 
-function showTeacherLogin(){
-  home.style.display="none";
-  teacherLogin.style.display="block";
-}
-
-function teacherLogin(){
-  if(teacherPass.value===TEACHER_PASSWORD){
-    teacherLogin.style.display="none";
-    teacherAdmin.style.display="block";
-    loadResults();
+function ownerAccess(){
+  const c=prompt("Code please");
+  if(c===OWNER_CODE){
+    home.style.display="none";
+    ownerSuite.style.display="block";
   }
 }
 
-function loadResults(){
-  const r=JSON.parse(localStorage.getItem("results")||"[]");
-  resultsTable.innerHTML=r.map(x=>`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.score}</td><td>${x.difficulty}</td><td>${x.date}</td></tr>`).join("");
+function showTeacher(){
+  ownerSuite.style.display="none";
+  teacher.style.display="block";
+  teacherTable.innerHTML=JSON.parse(localStorage.getItem("scores")||"[]")
+    .map(x=>`<tr><td>${x.n}</td><td>${x.c}</td><td>${x.s}</td><td>${x.d}</td><td>${x.t}</td></tr>`).join("");
 }
 
-function clearResults(){
-  if(confirm("Clear all results?")){
-    localStorage.removeItem("results");
-    loadResults();
-  }
+function clearScores(){
+  if(confirm("Clear all scores?")) localStorage.removeItem("scores");
 }
 
 function toggleContrast(){ document.body.classList.toggle("high-contrast"); }
