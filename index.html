@@ -131,35 +131,62 @@ th,td{
     <option value="700">New York</option>
     <option value="400">Barcelona</option>
     <option value="600">Dubai</option>
+    <option value="550">Tokyo</option>
+    <option value="450">London</option>
+    <option value="480">Rome</option>
+    <option value="520">Sydney</option>
+    <option value="500">Berlin</option>
+    <option value="600">Los Angeles</option>
+    <option value="430">Amsterdam</option>
+    <option value="470">Bangkok</option>
+    <option value="590">Singapore</option>
   </select>
 
   <select id="transportSelect" onchange="updatePlannerCost()">
     <option value="0">Transport</option>
+    <option value="100">Bus</option>
     <option value="150">Coach</option>
+    <option value="200">Train</option>
+    <option value="250">Ferry</option>
     <option value="300">Plane</option>
     <option value="500">Plane (Premium)</option>
+    <option value="400">Cruise</option>
+    <option value="350">Private Car</option>
   </select>
 
   <select id="accommodationSelect" onchange="updatePlannerCost()">
     <option value="0">Accommodation</option>
-    <option value="400">Hostel</option>
+    <option value="200">Camping</option>
+    <option value="300">Hostel</option>
+    <option value="400">Budget Hotel</option>
     <option value="500">Apartment</option>
     <option value="600">Hotel</option>
+    <option value="700">Resort</option>
+    <option value="800">Luxury Hotel</option>
   </select>
 
   <select id="foodSelect" onchange="updatePlannerCost()">
     <option value="0">Food</option>
+    <option value="30">Street Food</option>
     <option value="50">Budget Meals</option>
+    <option value="80">Fast Food</option>
     <option value="100">Normal Meals</option>
+    <option value="150">Fine Dining</option>
     <option value="200">Luxury Meals</option>
   </select>
 
   <select id="activitySelect" multiple onchange="updatePlannerCost()">
     <option value="0">Activities</option>
-    <option value="50">Museum</option>
-    <option value="100">City Tour</option>
-    <option value="150">Theme Park</option>
-    <option value="200">Luxury Experience</option>
+    <option value="20">Sightseeing</option>
+    <option value="40">Museum</option>
+    <option value="50">City Tour</option>
+    <option value="60">Beach</option>
+    <option value="70">Hiking</option>
+    <option value="80">Theme Park</option>
+    <option value="90">Boat Tour</option>
+    <option value="100">Luxury Experience</option>
+    <option value="110">Nightlife</option>
+    <option value="120">Shopping</option>
   </select>
 
   <p id="plannerResult"></p>
@@ -246,7 +273,12 @@ const destinations=[
  {a:"London",c:["Pound","Big Ben","Museums","Mild","Royal Family"]},
  {a:"New York",c:["Dollar","Statue of Liberty","Skyscrapers","Autumn","Broadway"]},
  {a:"Rome",c:["Colosseum","Pizza","Euro","Historic","Mediterranean"]},
- {a:"Sydney",c:["Opera House","AUD","Beaches","Summer","Harbour"]}
+ {a:"Sydney",c:["Opera House","AUD","Beaches","Summer","Harbour"]},
+ {a:"Berlin",c:["Brandenburg Gate","Euro","Beer","History","Culture"]},
+ {a:"Los Angeles",c:["Hollywood","Dollar","Beach","Sun","Movies"]},
+ {a:"Amsterdam",c:["Canals","Euro","Bikes","Tulips","Windmills"]},
+ {a:"Bangkok",c:["Temple","Baht","Spicy","Markets","River"]},
+ {a:"Singapore",c:["Marina Bay","Dollar","Gardens","Modern","Food"]},
 ];
 
 // =================== LOGIN FUNCTIONS ===================
@@ -269,9 +301,46 @@ function logoutAll(){ if(confirm("Clear all scores and log out everyone?")){ loc
 
 // =================== TRIP PLANNER ===================
 function showPlanner(){ home.style.display="none"; planner.style.display="block"; startPlanner(); }
-function startPlanner(){ plannerBudget = Math.floor(Math.random()*(5000-1500+1))+1500; extraFees = Math.floor(Math.random()*200); document.getElementById('budgetText').innerText = `Budget: £${plannerBudget} (Extra Fees: £${extraFees} may apply)`; destinationSelect.value=transportSelect.value=accommodationSelect.value=foodSelect.value="0"; activitySelect.value="0"; plannerResult.innerText = ""; }
-function updatePlannerCost(){ const dest = parseInt(destinationSelect.value)||0; const transport = parseInt(transportSelect.value)||0; const accommodation = parseInt(accommodationSelect.value)||0; const food = parseInt(foodSelect.value)||0; const activities = Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0); const totalCost = dest+transport+accommodation+food+activities+extraFees; plannerResult.innerText = `Total Cost: £${totalCost} (Budget: £${plannerBudget})`; }
-function finishPlanner(){ const dest=parseInt(destinationSelect.value)||0; const transport=parseInt(transportSelect.value)||0; const accommodation=parseInt(accommodationSelect.value)||0; const food=parseInt(foodSelect.value)||0; const activities=Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0); let totalCost=dest+transport+accommodation+food+activities+extraFees; let score=0; if(dest>0) score++; if(transport>0) score++; if(accommodation>0) score++; if(food>0) score++; if(activities>0) score++; if(totalCost<=plannerBudget) score++; if(score>5) score=5; const name=plannerName.value||"Anonymous"; const studentClass=plannerClass.value||"Unknown"; const plannerScores=JSON.parse(localStorage.getItem('plannerScores')||"[]"); plannerScores.push({n:name,c:studentClass,s:score,max:5,t:new Date().toLocaleString()}); localStorage.setItem('plannerScores',JSON.stringify(plannerScores)); alert(`Trip Finished!\nTotal Cost: £${totalCost}\nRemaining Budget: £${plannerBudget-totalCost}\nScore: ${score}/5`); backHome(); }
+function startPlanner(){ 
+  plannerBudget = Math.floor(Math.random()*(5000-1500+1))+1500; 
+  extraFees = Math.floor(Math.random()*200); 
+  document.getElementById('budgetText').innerText = `Budget: £${plannerBudget} (Extra Fees: £${extraFees} may apply)`; 
+  destinationSelect.value=transportSelect.value=accommodationSelect.value=foodSelect.value="0"; 
+  Array.from(activitySelect.options).forEach(o=>o.selected=false);
+  plannerResult.innerText = ""; 
+}
+function updatePlannerCost(){ 
+  const dest = parseInt(destinationSelect.value)||0; 
+  const transport = parseInt(transportSelect.value)||0; 
+  const accommodation = parseInt(accommodationSelect.value)||0; 
+  const food = parseInt(foodSelect.value)||0; 
+  const activities = Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0); 
+  const totalCost = dest+transport+accommodation+food+activities+extraFees; 
+  plannerResult.innerText = `Total Cost: £${totalCost} (Budget: £${plannerBudget})`; 
+}
+function finishPlanner(){ 
+  const dest=parseInt(destinationSelect.value)||0; 
+  const transport=parseInt(transportSelect.value)||0; 
+  const accommodation=parseInt(accommodationSelect.value)||0; 
+  const food=parseInt(foodSelect.value)||0; 
+  const activities=Array.from(activitySelect.selectedOptions).reduce((sum,opt)=>sum+parseInt(opt.value),0); 
+  let totalCost=dest+transport+accommodation+food+activities+extraFees; 
+  let score=0; 
+  if(dest>0) score++; 
+  if(transport>0) score++; 
+  if(accommodation>0) score++; 
+  if(food>0) score++; 
+  if(activities>0) score++; 
+  if(totalCost<=plannerBudget) score++; 
+  if(score>5) score=5; 
+  const name=plannerName.value||"Anonymous"; 
+  const studentClass=plannerClass.value||"Unknown"; 
+  const plannerScores=JSON.parse(localStorage.getItem('plannerScores')||"[]"); 
+  plannerScores.push({n:name,c:studentClass,s:score,max:5,t:new Date().toLocaleString()}); 
+  localStorage.setItem('plannerScores',JSON.stringify(plannerScores)); 
+  alert(`Trip Finished!\nTotal Cost: £${totalCost}\nRemaining Budget: £${plannerBudget-totalCost}\nScore: ${score}/5`); 
+  backHome(); 
+}
 function backHome(){ document.querySelectorAll("section").forEach(s=>s.style.display="none"); home.style.display="block"; }
 
 // =================== GUESS GAME ===================
